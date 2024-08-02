@@ -1,0 +1,47 @@
+- name: Add all GitHub repositories as submodules
+  hosts: localhost
+  vars:
+    github_username: "TheBranchDriftCatalyst"
+    github_token: "TODO GET ME FROM ENV"
+    target_directory: "../repositories"
+  tasks:
+    - name: Ensure target directory exists
+      file:
+        path: "{{ target_directory }}"
+        state: directory
+
+    - name: Get the list of public and private repositories
+      uri:
+        # This doesnt really get the private ones yet
+        # url: "https://api.github.com/search/repositories?q=user:{{ github_username }}"
+        url: "https://api.github.com/users/{{ github_username }}/repos"
+        method: GET
+        headers:
+          Accept: "application/vnd.github+json"
+          Authorization: "Bearer {{ github_token }}"
+          X-GitHub-Api-Version: "2022-11-28"
+        return_content: yes
+        body: { visibility }
+      register: github_repos
+
+    - name: Parse repository names and clone URLs
+      set_fact:
+        repositories: "{{ github_repos.json | json_query('[].{name: name, url: ssh_url}') }}"
+
+    - name: Check if repository directory exists
+      stat:
+        path: "{{ target_directory }}/{{ item.name }}"
+      with_items: "{{ repositories }}"
+      register: repo_dirs
+
+    - name: Add each repository as a submodule
+      command: "git submodule add {{ item.item.url }} {{ target_directory }}/{{ item.item.name }}"
+      with_items: "{{ repo_dirs.results }}"
+      args:
+        chdir: "{{ target_directory }}"
+      when: not item.stat.exists
+
+    - name: Initialize and update submodules
+      command: "git submodule update --init --recursive"
+      args:
+        chdir: "{{ target_directory }}"

@@ -1,0 +1,41 @@
+---
+- name: Setup workspaces with symlinked repositories
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../../../workspaces/workspaces.yaml
+  tasks:
+    - name: Ensure workspaces directory exists
+      file:
+        path: "../workspaces"
+        state: directory
+
+    - name: Create workspace directories
+      file:
+        path: "../workspaces/{{ item.name }}"
+        state: directory
+      with_items: "{{ workspaces }}"
+
+    - name: Create symlinks for repositories
+      file:
+        src: "{{ playbook_dir }}/../repositories/{{ repo }}"
+        dest: "{{ playbook_dir }}/../workspaces/{{ workspace.name }}/{{ repo }}"
+        state: link
+      with_items: "{{ workspaces }}"
+      loop_control:
+        loop_var: workspace
+      with_nested:
+        - "{{ workspaces }}"
+        - "{{ item.repositories }}"
+
+    - name: Copy workspace.yaml to each workspace directory
+      copy:
+        src: workspace.yaml
+        dest: "../workspaces/{{ item.name }}/workspace.yaml"
+      with_items: "{{ workspaces }}"
+
+    - name: Create .vscode directory in each workspace
+      file:
+        path: "../workspaces/{{ item.name }}/.vscode"
+        state: directory
+      with_items: "{{ workspaces }}"
