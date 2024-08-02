@@ -1,0 +1,72 @@
+services:
+  ubuntu:
+    build:
+      context: .
+      dockerfile: ubuntu.Dockerfile
+    container_name: ubuntu_container
+    environment:
+      SSH_USERNAME: panda
+      SSH_PASSWORD: panda
+    ports:
+      - "2201:22"
+
+
+  # debian:
+  #   image: debian:latest
+  #   container_name: debian_container
+  #   tty: true
+  #   ports:
+  #     - "2202:22"
+  #   environment:
+  #     - ROOT_PASSWORD=root
+  #   volumes:
+  #     - ./install.sh:/install.sh
+  #   command: sh -c "bash /install.sh && bash"
+
+  # centos:
+  #   image: centos:latest
+  #   container_name: centos_container
+  #   tty: true
+  #   ports:
+  #     - "2203:22"
+  #   environment:
+  #     - ROOT_PASSWORD=root
+  #   volumes:
+  #     - ./install.sh:/install.sh
+  #   command: sh -c "bash /install.sh && bash"
+
+  # fedora:
+  #   image: fedora:latest
+  #   container_name: fedora_container
+  #   tty: true
+  #   ports:
+  #     - "2204:22"
+  #   environment:
+  #     - ROOT_PASSWORD=root
+  #   volumes:
+  #     - ./install.sh:/install.sh
+  #   command: sh -c "bash /install.sh && bash"
+
+  # arch:
+  #   image: archlinux:latest
+  #   container_name: arch_container
+  #   tty: true
+  #   ports:
+  #     - "2205:22"
+  #   environment:
+  #     - ROOT_PASSWORD=root
+  #   volumes:
+  #     - ./install.sh:/install.sh
+  #   command: sh -c "bash /install.sh && bash"
+
+  # alpine:
+  #   image: alpine:latest
+  #   container_name: alpine_container
+  #   tty: true
+  #   ports:
+  #     - "2206:22"
+  #   environment:
+  #     - ROOT_PASSWORD=root
+  #   volumes:
+  #     - ./install.sh:/install.sh
+  #   command: sh -c "sh /install.sh && sh"

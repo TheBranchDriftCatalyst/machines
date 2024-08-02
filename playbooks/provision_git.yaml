@@ -1,0 +1,106 @@
+# NOTE: Status Working Nicely
+---
+- name: Setup Git with SSH and add key to GitHub
+  hosts: localhost
+  vars:
+    git_user_name: "TheBranchDriftCatalyst"
+    git_user_email: "djdanielsh@gmail.com"
+    ssh_key_comment: "djdanielsh@gmail.com"
+    ssh_key_path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+    github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+    hostname: "{{ ansible_facts['hostname'] }}"
+  tasks:
+    - name: Update apt repository cache
+      become: true
+      apt:
+        update_cache: yes
+        
+    - name: Install Git
+      become: true
+      apt:
+        name: git
+        state: present
+
+    - name: Install OpenSSH client
+      become: true
+      apt:
+        name: openssh-client
+        state: present
+
+    - name: Debug SSH key path
+      debug:
+        msg: "SSH key path is: {{ ssh_key_path }}"
+
+    - name: Check if SSH key already exists
+      stat:
+        path: "{{ ssh_key_path }}"
+      register: ssh_key
+
+    - name: Debug SSH key existence
+      debug:
+        msg: "SSH key exists: {{ ssh_key.stat.exists }}"
+
+    - name: Generate a new SSH key pair
+      command: ssh-keygen -t rsa -b 2048 -C "{{ git_user_name }}@{{ hostname }}" -f {{ ssh_key_path }} -N ""
+      when: not ssh_key.stat.exists
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: "{{ ansible_env.HOME }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_env.USER }}"
+        group: "{{ ansible_env.USER }}"
+
+    - name: Copy public key to remote authorized_keys
+      authorized_key:
+        user: "{{ ansible_env.USER }}"
+        state: present
+        key: "{{ lookup('file', ssh_key_path + '.pub') }}"
+
+    - name: Debug public key file existence
+      stat:
+        path: "{{ ssh_key_path }}.pub"
+      register: ssh_pub_key_file
+
+    - name: Debug public key file existence check
+      debug:
+        msg: "SSH public key file exists: {{ ssh_pub_key_file.stat.exists }}"
+
+    - name: Ensure global Git configuration file exists
+      file:
+        path: "{{ ansible_env.HOME }}/.gitconfig"
+        state: touch
+
+    - name: Configure Git user name
+      command: git config user.name "{{ git_user_name }}"
+
+    - name: Configure Git user email
+      command: git config user.email "{{ git_user_email }}"
+
+    - name: Add GitHub to known hosts (example for GitHub)
+      known_hosts:
+        path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
+        name: github.com
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+
+    - name: Read the SSH public key
+      slurp:
+        src: "{{ ssh_key_path }}.pub"
+      register: ssh_pub_key
+
+    - name: Debug SSH public key
+      debug:
+        msg: "SSH public key content: {{ ssh_pub_key.content | b64decode }}"
+
+    - name: Add SSH key to GitHub
+      uri:
+        url: https://api.github.com/user/keys
+        method: POST
+        headers:
+          Accept: "application/vnd.github+json"
+          Authorization: "Bearer {{ github_token }}"
+          "X-GitHub-Api-Version": "2022-11-28"
+        body: "{{ {'title': hostname, 'key': ssh_pub_key.content | b64decode} | to_json }}"
+        status_code: 201
+      when: ssh_key.stat.exists

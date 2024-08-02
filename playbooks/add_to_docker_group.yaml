@@ -1,0 +1,64 @@
+---
+- name: Add user to sudoers and docker group
+  hosts: localhost
+  become: yes
+  vars:
+    user: "{{ lookup('env', 'USER') }}"  # This will take the current system user as default
+  tasks:
+    - name: Ensure the sudo package is installed
+      apt:
+        name: sudo
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Ensure the sudo package is installed
+      yum:
+        name: sudo
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Add user to sudo group
+      user:
+        name: "{{ user }}"
+        groups: sudo
+        append: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Add user to wheel group
+      user:
+        name: "{{ user }}"
+        groups: wheel
+        append: yes
+      when: ansible_os_family == 'RedHat'
+
+    - name: Allow passwordless sudo for the user
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%{{ user }}'
+        line: '%{{ user }} ALL=(ALL) NOPASSWD:ALL'
+        validate: 'visudo -cf %s'
+
+    # - name: Ensure Docker is installed
+    #   apt:
+    #     name: docker.io
+    #     state: present
+    #   when: ansible_os_family == 'Debian'
+
+    # - name: Ensure Docker is installed
+    #   yum:
+    #     name: docker
+    #     state: present
+    #   when: ansible_os_family == 'RedHat'
+
+    - name: Ensure the Docker service is started
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ user }}"
+        groups: docker
+        append: yes

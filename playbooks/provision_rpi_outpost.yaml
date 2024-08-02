@@ -1,0 +1,68 @@
+---
+- name: Provision Raspberry Pi
+  hosts: localhost
+  become: yes
+  # Pre Steps:
+  # sudo apt install ansible-core
+  tasks:
+    # kinda the chicken or the egg problem
+    # - name: Install ansible
+    #   apt:
+    #     name: ansible
+    #     state: present
+
+    - name: Install snap
+      apt:
+        name: snapd
+        state: present
+    
+    - name: Install task using snap
+      snap:
+        name: task
+        classic: yes
+        state: present
+
+    - name: Install nvim using snap
+      snap:
+        name: nvim
+        classic: yes
+        state: present
+
+    - name: Clone NvChad starter repository
+      git:
+        repo: 'https://github.com/NvChad/starter'
+        dest: '~/.config/nvim'
+        update: yes
+
+    - name: Install Mason plugins in nvim
+      command: nvim --headless +MasonInstallAll +qa
+
+    - name: Create alias for python3 as python
+      lineinfile:
+        path: ~/.bashrc
+        line: 'alias python="python3"'
+        create: yes
+
+    - name: Install pip
+      apt:
+        name: python3-pip
+        state: present
+    
+    - name: Install poetry
+      apt:
+        name: python3-poetry
+        state: present
+    
+    - name: Install direnv
+      apt:
+        name: direnv
+        state: present
+
+    - name: Add direnv hook to bashrc
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.bashrc"
+        line: 'eval "$(direnv hook bash)"'
+        create: yes
+
+      
+    # Add sudo apt install fzf
