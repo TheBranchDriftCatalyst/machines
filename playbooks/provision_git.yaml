@@ -1,7 +1,7 @@
 # NOTE: Status Working Nicely
 ---
 - name: Setup Git with SSH and add key to GitHub
-  hosts: localhost
+  hosts: all
   vars:
     git_user_name: "TheBranchDriftCatalyst"
     git_user_email: "djdanielsh@gmail.com"

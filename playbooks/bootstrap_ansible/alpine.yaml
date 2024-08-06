@@ -1,0 +1,22 @@
+# This one is working as expected
+- name: Ensure Python is installed on Alpine-based systems
+  ansible.builtin.raw: |
+    if ! command -v python3 &> /dev/null; then
+      apk add --no-cache python3
+    fi
+  changed_when: false
+
+- name: Set the Python interpreter for Alpine-based systems
+  set_fact:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: Gather facts
+  ansible.builtin.setup:
+
+- name: Ensure pip3 is installed on Alpine-based systems
+  ansible.builtin.raw: apk add --no-cache py3-pip
+  changed_when: false
+
+- name: Ensure Ansible is installed on Alpine-based systems
+  ansible.builtin.raw: apk add --no-cache ansible
+  changed_when: false

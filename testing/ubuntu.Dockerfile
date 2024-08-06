@@ -3,8 +3,8 @@ FROM ubuntu:24.04
 
 # Set environment variables to avoid interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
-ENV SSH_USERNAME=ubuntu
-ENV PASSWORD=changeme
+# ENV SSH_USERNAME=ubuntu
+# ENV PASSWORD=changeme
 
 # Install OpenSSH server and clean up
 RUN apt-get update \
@@ -25,11 +25,12 @@ RUN mkdir -p /home/$SSH_USERNAME/.ssh && chown $SSH_USERNAME:$SSH_USERNAME /home
     && echo "PermitRootLogin no" >> /etc/ssh/sshd_config
 
 # Copy the script to configure the user's password and authorized keys
-COPY ../scripts/configure-ssh-user.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/configure-ssh-user.sh
+# COPY ./configure-ssh-user.sh /usr/local/bin/
+# RUN chmod +x /usr/local/bin/configure-ssh-user.sh
 
 # Expose SSH port
 EXPOSE 22
 
 # Start SSH server
-CMD ["/usr/local/bin/configure-ssh-user.sh"]
+CMD ["exec", "/usr/bin/sshd", "-D"]
+# CMD ["/usr/local/bin/configure-ssh-user.sh"]

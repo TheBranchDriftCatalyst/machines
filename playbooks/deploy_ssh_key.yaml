@@ -1,0 +1,65 @@
+---
+- name: Deploy id_rsa.pub to remote hosts
+  hosts: all
+  # become: yes
+  tasks:
+    # - name: Ensure Python is installed on Alpine-based systems
+    #   ansible.builtin.raw: |
+    #     if ! command -v python3 &> /dev/null; then
+    #       apk add --no-cache python3
+    #     fi
+    #   when: ansible_distribution == "Alpine"
+    #   changed_when: false
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Set ansible_user_dir fact
+      set_fact:
+        ansible_user_dir: "~/"
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: "~/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Read the public key content
+      become: false
+      local_action:
+        module: slurp
+        src: ~/.ssh/id_rsa.pub
+      register: pub_key_content
+
+    - name: Copy the public key to the remote hosts
+      ansible.builtin.copy:
+        content: "{{ pub_key_content.content | b64decode }}"
+        dest: "~/.ssh/authorized_keys"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0600'
+      register: copy_result
+
+    - name: Verify the content of the authorized_keys file
+      command: cat "~/.ssh/authorized_keys"
+      register: authorized_keys_content
+
+    - name: Debug the content of the authorized_keys file
+      debug:
+        msg: "Content of authorized_keys: {{ authorized_keys_content.stdout }}"
+
+    - name: Add the public key to authorized_keys if not already present
+      lineinfile:
+        path: "~/.ssh/authorized_keys"
+        create: yes
+        line: "{{ pub_key_content.content | b64decode }}"
+        state: present
+        mode: '0600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Report result of key deployment
+      debug:
+        msg: "Public key deployed to {{ inventory_hostname }} with result: {{ copy_result }}"

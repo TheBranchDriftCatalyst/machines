@@ -1,0 +1,22 @@
+# untested so far
+- name: Ensure Python is installed on Debian-based systems
+  ansible.builtin.raw: |
+    if ! command -v python3 &> /dev/null; then
+      apt-get update && apt-get install -y python3
+    fi
+  changed_when: false
+
+- name: Set the Python interpreter for Debian-based systems
+  set_fact:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: Gather facts
+  ansible.builtin.setup:
+
+- name: Ensure pip3 is installed on Debian-based systems
+  ansible.builtin.raw: apt-get install -y python3-pip
+  changed_when: false
+
+- name: Ensure Ansible is installed on Debian-based systems
+  ansible.builtin.raw: pip3 install ansible
+  changed_when: false

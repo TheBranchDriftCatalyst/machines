@@ -1,0 +1,58 @@
+# README: This script will handle the instalation of Ansible on a CLEAN target machine.
+# it uses direct commands to achieve this and not need python to be previously installed
+- hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Check if the system is Debian-based
+      ansible.builtin.raw: cat /etc/os-release
+      register: os_release
+      changed_when: false
+      failed_when: false
+
+    - name: Check if the system is Alpine-based
+      ansible.builtin.raw: cat /etc/alpine-release
+      register: alpine_release
+      changed_when: false
+      failed_when: false
+
+    - name: Check if the system is macOS
+      ansible.builtin.raw: uname
+      register: uname_result
+      changed_when: false
+      failed_when: false
+
+    - name: Set OS type for Debian-based systems
+      ansible.builtin.set_fact:
+        os_type: "debian"
+      when: os_release.stdout is defined and ("Debian" in os_release.stdout or "Ubuntu" in os_release.stdout)
+
+    - name: Set OS type for Alpine-based systems
+      ansible.builtin.set_fact:
+        os_type: "alpine"
+      when: alpine_release.stdout is defined
+
+    - name: Set OS type for macOS
+      ansible.builtin.set_fact:
+        os_type: "darwin"
+      when: uname_result.stdout is defined and uname_result.stdout == "Darwin"
+
+    - name: Debug OS Type Detection
+      ansible.builtin.debug:
+        var: os_type
+
+    - name: Include Debian-specific tasks
+      ansible.builtin.include_tasks: debian.yaml
+      when: os_type == 'debian'
+
+    - name: Include Alpine-specific tasks
+      ansible.builtin.include_tasks: alpine.yaml
+      when: os_type == 'alpine'
+
+    - name: Include macOS-specific tasks
+      ansible.builtin.include_tasks: darwin.yaml
+      when: os_type == 'darwin'
+
+    - name: Gather facts
+      ansible.builtin.setup:
+        gather_subset: "all"

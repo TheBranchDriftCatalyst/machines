@@ -1,16 +1,17 @@
 #!/bin/bash
 
-# Set default values for SSH_USERNAME and PASSWORD if not provided
-: ${SSH_USERNAME:=panda}
-: ${PASSWORD:=panda}
+# # Set default values for SSH_USERNAME and PASSWORD if not provided
+# : ${SSH_USERNAME:=panda}
+# : ${PASSWORD:=panda}
 
 # Create the user with the provided username and set the password
 if id "$SSH_USERNAME" &>/dev/null; then
+    echo $(id "$SSH_USERNAME")
     echo "User $SSH_USERNAME already exists"
 else
     useradd -ms /bin/bash "$SSH_USERNAME"
     echo "$SSH_USERNAME:$PASSWORD" | chpasswd
-    echo "User $SSH_USERNAME created with the provided password"
+    echo "User $SSH_USERNAME created with the provided password $PASSWORD" 
 fi
 
 # Set the authorized keys from the AUTHORIZED_KEYS environment variable (if provided)

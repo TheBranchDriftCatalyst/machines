@@ -1,0 +1,17 @@
+---
+- name: Gather and store facts from all hosts
+  hosts: all  # Adjust this to target specific hosts or groups
+  gather_facts: yes  # Enable fact gathering
+
+  tasks:
+    - name: Create a directory to store facts
+      local_action:
+        module: file
+        path: "../host_facts"
+        state: directory
+
+    - name: Save facts to a file on the local machine
+      local_action:
+        module: copy
+        content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
+        dest: "./host_facts/{{ inventory_hostname }}_facts.json"
