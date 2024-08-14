@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  provision:
+    desc: "Provision Raspberry Pi images with custom hostnames"
+    cmds:
+    - "ansible-playbook ansible/playbook.yaml"

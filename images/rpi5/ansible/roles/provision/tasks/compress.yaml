@@ -1,0 +1,16 @@
+- name: Unmount the image
+  mount:
+    path: "{{ mount_point }}"
+    state: unmounted
+
+- name: Shrink filesystem
+  command: "e2fsck -f {{ image_path }}"
+  become: yes
+
+- name: Resize filesystem to minimum size
+  command: "resize2fs -M {{ image_path }}"
+  become: yes
+
+- name: Compress the image
+  command: "gzip -c {{ image_path }} > {{ compressed_image }}"
+  become: yes

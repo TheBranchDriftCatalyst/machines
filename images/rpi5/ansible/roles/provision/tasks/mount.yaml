@@ -1,0 +1,16 @@
+- name: Calculate the partition offset
+  command: "fdisk -l {{ image_path }} | grep Linux | awk '{{print $2 * 512}}'"
+  register: partition_offset
+
+- name: Create mount point
+  file:
+    path: "{{ mount_point }}"
+    state: directory
+
+- name: Mount the image
+  mount:
+    src: "{{ image_path }}"
+    path: "{{ mount_point }}"
+    fstype: ext4
+    opts: "loop,offset={{ partition_offset.stdout }}"
+    state: mounted

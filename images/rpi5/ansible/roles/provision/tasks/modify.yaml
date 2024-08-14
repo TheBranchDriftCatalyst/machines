@@ -1,0 +1,15 @@
+- name: Create cloud-config file
+  template:
+    src: cloud-init.yaml.j2
+    dest: "{{ mount_point }}/boot/cloud-init.yaml"
+
+- name: Set hostname in /etc/hostname
+  lineinfile:
+    path: "{{ mount_point }}/etc/hostname"
+    line: "{{ hostname }}"
+
+- name: Update /etc/hosts
+  lineinfile:
+    path: "{{ mount_point }}/etc/hosts"
+    line: "127.0.1.1   {{ hostname }}"
+    create: yes
