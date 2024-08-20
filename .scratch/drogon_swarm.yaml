@@ -1,13 +1,13 @@
 ---
 - name: Install Docker and setup Docker Swarm on Raspberry Pi
   hosts: localhost
-  become: yes
+  become: true
   vars:
     swarm_role: "worker"  # Change this variable to "worker" for worker nodes
     manager_ip: "drogon.localdomain"  # Set the manager IP address for worker nodes
   tasks:
     - name: Install Docker using snap
-      snap:
+      ansible.builtin.apt:
         name: docker
         state: present
 
@@ -19,7 +19,7 @@
     #     enabled: yes
 
     - name: Initialize Docker Swarm (Master only)
-      command: docker swarm init
+      ansible.builtin.command: docker swarm init
       when: swarm_role == "master"
       register: swarm_init
       ignore_errors: true

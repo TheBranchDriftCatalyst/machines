@@ -1,0 +1,60 @@
+---
+- name: Create and compress Raspberry Pi SD card image
+  hosts: localhost
+  become: yes
+  vars:
+    sd_card_device: "/dev/disk4"  # Replace with your actual SD card device, e.g., /dev/mmcblk0
+    # image_path: "../raspberry_pi_sdcard_zstd.img"
+    mount_point: "/mnt/sdcard"
+    partition_table_file: "../partition_table_zstd.gpt"
+    output_dir: "../images/rpi5/images"
+    zstd_compression_level: 9  # Adjust compression level (1-19) based on your needs
+
+  tasks:
+
+    - name: Check if the system is macOS
+      set_fact:
+        is_macos: "{{ ansible_os_family == 'Darwin' }}"
+
+    # - name: Install required packages (macOS)
+    #   become: false
+    #   when: is_macos
+    #   community.general.homebrew:
+    #     name: "{{ item }}"
+    #     state: present
+    #   loop:
+    #     - e2fsprogs
+    #     - coreutils
+    #     - xz  # For the gzip command
+    #     - zstd  # For zstd compression
+
+    # - name: Trim all partitions on the drive (Linux only)
+    #   when: ansible_os_family == 'Debian' or ansible_os_family == 'RedHat'
+    #   command: "fstrim -v {{ sd_card_device }}"
+    #   ignore_errors: yes  # Ignore errors in case the OS doesn't support trim
+
+    # - name: Dump the GPT partition table to a file
+    #   command: "sgdisk --backup={{ partition_table_file }} {{ sd_card_device }}"
+
+    - name: Create output directory for compressed partitions
+      file:
+        path: "{{ output_dir }}"
+        state: directory
+
+
+    - name: Compress the SD card image
+      shell: >
+        dd if={{ sd_card_device }} bs=4M | zstd -{{ zstd_compression_level }} -o {{ output_dir }}/rpi-5.base.zst
+      async: 3600
+      poll: 30
+
+      # Change the file permissions here too 
+
+    - name: Clean up mount point
+      file:
+        path: "{{ mount_point }}"
+        state: absent
+
+    - name: Notify completion
+      debug:
+        msg: "Partition table and partitions compressed and saved in {{ output_dir }}."

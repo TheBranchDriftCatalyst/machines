@@ -1,3 +1,0 @@
-- include_tasks: mount.yaml
-- include_tasks: modify.yaml
-- include_tasks: compress.yaml

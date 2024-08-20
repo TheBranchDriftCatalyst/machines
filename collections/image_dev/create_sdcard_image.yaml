@@ -1,0 +1,249 @@
+---
+- name: Create and compress Raspberry Pi SD card image
+  hosts: localhost
+  become: yes
+  vars:
+    sd_card_device: "/dev/disk4"  # Replace with your actual SD card device, e.g., /dev/mmcblk0
+    image_path: "../raspberry_pi_sdcard.img"
+    # Tmp image path (for the large fucking disk)
+    mount_point: "/mnt/sdcard0"
+    partition_offset: ""
+
+  tasks:
+
+    - name: Check if the system is macOS
+      set_fact:
+        is_macos: "{{ ansible_os_family == 'Darwin' }}"
+
+
+    - name: Install required packages (macOS)
+      become: false
+      when: is_macos
+      community.general.homebrew:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - e2fsprogs
+        - coreutils
+        - xz  # For the gzip command
+
+
+    - name: Create image of the SD card
+      command: "dd if={{ sd_card_device }} of={{ image_path }} bs=4M status=progress"
+      async: 3600
+      poll: 5
+
+    - name: Shrink filesystem (Check and Repair)
+      # command: "e2fsck -f -C 0 {{ image_path }}"
+      command: "e2fsck -f -C 0 -p {{ image_path }}"
+      async: 3600
+      poll: 5
+
+    - name: Shrink filesystem to minimum size
+      command: "resize2fs -p -M {{ image_path }}"
+      async: 3600
+      poll: 5
+
+    - name: Unmount the image
+      mount:
+        path: "{{ mount_point }}"
+        state: unmounted
+
+    - name: Compress the image
+      command: "gzip {{ image_path }}"
+      async: 3600
+      poll: 5
+
+    - name: Clean up mount point
+      file:
+        path: "{{ mount_point }}"
+        state: absent
+    # - name: Create image of the SD card
+    #   command: "dd if={{ sd_card_device }} of={{ image_path }} bs=4M status=progress"
+    #   async: 3600 # 1 hour
+    #   poll: 5
+    #   register: dd_job
+
+    # - name: Wait for dd command to finish
+    #   wait_for:
+    #     path: "{{ image_path }}"
+    #     state: file
+    #   async: 3600 # 1 hour
+    #   poll: 5
+    #   until: dd_job.finished
+
+    # - name: Calculate partition offset for the filesystem
+    #   command: "fdisk -l {{ image_path }} | grep Linux | awk '{{print $2 * 512}}'"
+    #   register: partition_offset
+    #   changed_when: false
+    #   debug:
+
+    # - name: Shrink filesystem (Check and Repair)
+    #   command: "e2fsck -f -C 0 -p {{ image_path }}"
+    #   args:
+    #     executable: /sbin/e2fsck
+    #   async: 600
+    #   poll: 0
+    #   register: e2fsck_job
+
+    # - name: Wait for e2fsck to finish
+    #   wait_for:
+    #     state: stopped
+    #   async: 600
+    #   poll: 5
+    #   until: e2fsck_job.finished
+
+    # - name: Shrink filesystem to minimum size
+    #   command: "resize2fs -p {{ image_path }}"
+    #   args:
+    #     executable: /sbin/resize2fs
+    #   async: 600
+    #   poll: 0
+    #   register: resize_job
+
+    # - name: Wait for resize2fs to finish
+    #   wait_for:
+    #     state: stopped
+    #   async: 600
+    #   poll: 5
+    #   until: resize_job.finished
+
+    # - name: Unmount the image
+    #   mount:
+    #     path: "{{ mount_point }}"
+    #     state: unmounted
+
+    # - name: Compress the image
+    #   command: "gzip {{ image_path }}"
+    #   async: 1200
+    #   poll: 0
+    #   register: gzip_job
+
+    # - name: Wait for gzip to finish
+    #   wait_for:
+    #     state: stopped
+    #   async: 1200
+    #   poll: 5
+    #   until: gzip_job.finished
+
+    # - name: Clean up mount point
+    #   file:
+    #     path: "{{ mount_point }}"
+    #     state: absent
+
+
+
+# ---
+# - name: Pre-install dependencies on macOS
+#   hosts: localhost
+#   become: yes
+#   gather_facts: yes
+#   vars:
+#     sd_card_device: "/dev/md4"  # Replace with your actual SD card device, e.g., /dev/mmcblk0
+#     image_path: "~/raspberry_pi_sdcard.img"
+#     mount_point: "../.mount/sdcard"
+#     partition_offset: ""
+#   tasks:
+#     - name: Check if the system is macOS
+#       set_fact:
+#         is_macos: "{{ ansible_os_family == 'Darwin' }}"
+
+#     # - name: Ensure Homebrew is installed (macOS)
+#     #   when: is_macos
+#     #   command: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#     #   args:
+#     #     creates: /usr/local/bin/brew
+#     #   register: brew_install
+
+#     - name: Install required packages (macOS)
+#       become: false
+#       when: is_macos
+#       community.general.homebrew:
+#         name: "{{ item }}"
+#         state: present
+#       loop:
+#         - e2fsprogs
+#         - coreutils
+#         # - findutils
+#         # - gnu-tar
+#         # - gnu-sed
+#         # - gawk
+#         # - gnutls
+#         # - gnu-indent
+#         # - gnu-getopt
+#         # - grep
+
+#         # - gnu-coreutils
+#         - xz  # For the gzip command
+
+#     - name: Create image of the SD card
+#       command: "dd if={{ sd_card_device }} of={{ image_path }} bs=4M status=progress"
+#       async: 1800
+#       poll: 0
+#       register: dd_job
+
+#     - name: Wait for dd command to finish
+#       wait_for:
+#         path: "{{ image_path }}"
+#         state: file
+#       async: 1800
+#       poll: 5
+#       until: dd_job.finished
+
+#     - name: Calculate partition offset for the filesystem
+#       command: "fdisk -l {{ image_path }} | grep Linux | awk '{{print $2 * 512}}'"
+#       register: partition_offset
+#       changed_when: false
+
+#     - name: Shrink filesystem (Check and Repair)
+#       command: "e2fsck -f -C 0 -p {{ image_path }}"
+#       args:
+#         executable: /usr/local/sbin/e2fsck
+#       async: 600
+#       poll: 0
+#       register: e2fsck_job
+
+#     - name: Wait for e2fsck to finish
+#       wait_for:
+#         state: stopped
+#       async: 600
+#       poll: 5
+#       until: e2fsck_job.finished
+
+#     - name: Shrink filesystem to minimum size
+#       command: "resize2fs -p {{ image_path }}"
+#       args:
+#         executable: /usr/local/sbin/resize2fs
+#       async: 600
+#       poll: 0
+#       register: resize_job
+
+#     - name: Wait for resize2fs to finish
+#       wait_for:
+#         state: stopped
+#       async: 600
+#       poll: 5
+#       until: resize_job.finished
+
+#     - name: Unmount the image
+#       mount:
+#         path: "{{ mount_point }}"
+#         state: unmounted
+
+#     - name: Compress the image
+#       command: "gzip {{ image_path }}"
+#       async: 1200
+#       poll: 0
+#       register: gzip_job
+
+#     - name: Wait for gzip to finish
+#       wait_for:
+#         state: stopped
+#       async: 1200
+#       poll: 5
+#       until: gzip_job.finished
+
+#     - name: Clean up mount point
+#       file:
+#         path: "{{ mount_point }}"
+#         state: absent

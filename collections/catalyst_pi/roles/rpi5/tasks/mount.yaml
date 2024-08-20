@@ -1,9 +1,9 @@
 - name: Calculate the partition offset
-  command: "fdisk -l {{ image_path }} | grep Linux | awk '{{print $2 * 512}}'"
+  ansible.builtin.command: "fdisk -l {{ image_path }} | grep Linux | awk '{{print $2 * 512}}'"
   register: partition_offset
 
 - name: Create mount point
-  file:
+  ansible.builtin.file:
     path: "{{ mount_point }}"
     state: directory
 

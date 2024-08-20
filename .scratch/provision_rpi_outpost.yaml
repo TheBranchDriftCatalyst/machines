@@ -11,22 +11,22 @@
     #     name: ansible
     #     state: present
 
-    - name: Install snap
-      apt:
-        name: snapd
-        state: present
+    # - name: Install snap
+    #   apt:
+    #     name: snapd
+    #     state: present
     
-    - name: Install task using snap
-      snap:
-        name: task
-        classic: yes
-        state: present
+    # - name: Install task using snap
+    #   snap:
+    #     name: task
+    #     classic: yes
+    #     state: present
 
-    - name: Install nvim using snap
-      snap:
-        name: nvim
-        classic: yes
-        state: present
+    # - name: Install nvim using snap
+    #   snap:
+    #     name: nvim
+    #     classic: yes
+    #     state: present
 
     - name: Clone NvChad starter repository
       git:
@@ -63,6 +63,3 @@
         path: "{{ ansible_env.HOME }}/.bashrc"
         line: 'eval "$(direnv hook bash)"'
         create: yes
-
-      
-    # Add sudo apt install fzf

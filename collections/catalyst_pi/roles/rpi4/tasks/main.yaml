@@ -1,0 +1,24 @@
+---
+# tasks file for rpi4
+
+- name: Update and upgrade apt packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+  become: true
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - git
+    - vim
+    - htop
+
+- name: Configure hostname
+  hostname:
+    name: "{{ rpi4_hostname }}"
+
+- name: Include additional tasks
+  include_tasks: additional_task.yaml
