@@ -1,0 +1,55 @@
+---
+- name: Mount shrunk and compressed Raspberry Pi SD card image
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/main.yaml
+
+  tasks:
+
+    - name: Install required utilities on macOS
+      when: is_macos
+      community.general.homebrew:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - coreutils
+        - zstd
+
+    - name: Install required utilities on Debian/Ubuntu
+      when: ansible_os_family == 'Debian'
+      apt:
+        name:
+          - coreutils
+          - zstd
+        state: present
+        update_cache: true
+
+    - name: Install required utilities on RedHat/CentOS
+      when: ansible_os_family == 'RedHat'
+      yum:
+        name:
+          - coreutils
+          - zstd
+        state: present
+
+    - name: Create mount point
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+
+    - name: Decompress and write the shrunk SD card image
+      shell: "zstdcat {{ image_file }} | dd of={{ sd_card_device }} bs=4M status=progress"
+      async: 3600
+      poll: 30
+
+    - name: Mount the filesystem
+      mount:
+        path: "{{ mount_point }}"
+        src: "{{ sd_card_device }}1"
+        fstype: ext4
+        state: mounted
+
+    - name: Notify completion
+      debug:
+        msg: "SD card image mounted at {{ mount_point }}."

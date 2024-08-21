@@ -1,24 +1,18 @@
 # https://blog.gitguardian.com/a-comprehensive-guide-to-sops/
 ---
-- name: Create PGP Key and Configure SOPS
+- name: Create PGP Key  and Configure SOPS integrated secrets repo. with catalyst public keyring 
   hosts: localhost
+
+  vars:
+    key_name: "{{ ansible_facts['hostname'] }}@knowledgedump.space"
+    key_comment: "SOPS ansible host"
+    key_server: "pgp.mit.edu"
+    sops_version: "v3.9.0"
+    sops_binary: "sops-{{ sops_version }}.linux.arm64"
+    sops_url: "https://github.com/getsops/sops/releases/download/{{ sops_version }}/{{ sops_binary }}"
+    secrets_repo: "{{ playbook_dir | dirname }}"
   tasks:
-    - name: Install GnuPG on macOS
-      when: ansible_os_family == "Darwin"
-      brew:
-        name: gnupg
-        state: present
-
-    - name: Install GnuPG on Linux
-      when: ansible_os_family == "Debian"
-      apt:
-        name: gnupg
-        state: present
-
-    - name: Export key details
-      set_fact:
-        key_name: "Tiexin Guo"
-        key_comment: "test key for sops"
+# BREAK HERE MAYBE
 
     - name: Generate GPG key
       shell: |
@@ -32,27 +26,74 @@
         Name-Comment: {{ key_comment }}
         Name-Real: {{ key_name }}
         EOF
-      environment:
-        KEY_NAME: "{{ key_name }}"
-        KEY_COMMENT: "{{ key_comment }}"
       register: gpg_key_gen
 
-    - name: List GPG keys
-      shell: gpg --list-keys
-      register: gpg_list_keys
+    - name: Get GPG key fingerprint
+      command: gpg --list-secret-keys --with-colons "{{ key_name }}"
+      register: gpg_fingerprint_output
 
     - name: Extract GPG key fingerprint
-      shell: gpg --list-secret-keys "{{ key_name }}" | grep -oP '([A-F0-9]{4} ){10}[A-F0-9]{4}'
-      register: gpg_key_fingerprint
+      set_fact:
+        gpg_fingerprint: "{{ gpg_fingerprint_output.stdout | regex_search('fpr:::::::::([A-F0-9]{40}):', '\\1') }}"
 
-    - name: Create .sops.yaml configuration
-      copy:
-        dest: "{{ lookup('env', 'HOME') }}/.sops.yaml"
-        content: |
-          creation_rules:
-            - pgp: >-
-                {{ gpg_key_fingerprint.stdout.strip() }}
-
-    - name: Print GPG key fingerprint for reference
+    - name: Debug GPG key fingerprint
       debug:
-        msg: "GPG key fingerprint: {{ gpg_key_fingerprint.stdout.strip() }}"
+        var: gpg_fingerprint
+
+    - name: Import Catalyst Dev public keys
+      loop: "{{ lookup('fileglob', secrets_repo + '/keyring/*.pub.asc', wantlist=True) }}"
+      command: gpg --import "{{ item }}"
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Export the GPG public key
+      command: gpg --export --armor "{{ gpg_fingerprint[0] }}"
+      register: exported_key
+
+    - name: Write the exported GPG public key to file
+      copy:
+        content: "{{ exported_key.stdout }}"
+        dest: "{{ secrets_repo }}/keyring/{{ gpg_fingerprint[0] }}.pub.asc"
+        force: yes
+
+    - name: Symlink .sops.yaml to home directory
+      file:
+        src: "{{ secrets_repo }}/.sops.yaml"
+        dest: "{{ ansible_user_dir }}/.sops.yaml"
+        state: link
+
+    - name: Read the sops.yaml file
+      slurp:
+        src: "{{ secrets_repo }}/.sops.yaml"
+      register: sops_yaml_content
+
+    - name: Parse the sops.yaml content
+      set_fact:
+        sops_yaml: "{{ sops_yaml_content.content | b64decode | from_yaml }}"
+
+    - name: Add new key to pgp field
+      set_fact:
+        sops_yaml: >-
+          {{
+            sops_yaml |
+            combine({
+              'creation_rules': sops_yaml.creation_rules | map('combine', {
+                'pgp': item.pgp | regex_replace('\s+', '') + ', ' + gpg_fingerprint[0]
+              })
+            })
+          }}
+      with_items: "{{ sops_yaml.creation_rules }}"
+
+    - name: Save the updated sops.yaml
+      copy:
+        content: "{{ sops_yaml | to_nice_yaml }}"
+        dest: "{{ secrets_repo }}/.sops.yaml"
+        force: yes
+
+    - name: Append hostname to key mapping to manifest file
+      lineinfile:
+        path: "{{ secrets_repo }}/manifest.sops.yaml"
+        line: "{{ gpg_fingerprint[0] }}: {{ key_name }}"
+        create: yes
+        state: present
+    

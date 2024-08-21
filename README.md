@@ -1,4 +1,18 @@
 
+# README
+
+This is a repository that stores galaxy compatible ansible playbooks for low level machine provisioning and tasks.  
+It also contains tools for managing and developmenet of raw .imgs and other
+
+## Machines Stack
+
+- Ansible + Ansible Galaxy
+- Molecule ansible testing framework.
+
+---
+
+## Old Readme Stuff Below (to be removed/moved)
+
 Generic base git template repository
 Steps to provision a new system:
 

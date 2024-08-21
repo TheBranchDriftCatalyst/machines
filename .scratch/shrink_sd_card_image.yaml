@@ -1,0 +1,78 @@
+---
+- name: Shrink and compress Raspberry Pi SD card image
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/main.yaml
+
+  tasks:
+
+    - name: Check if the system is macOS
+      set_fact:
+        is_macos: "{{ ansible_os_family == 'Darwin' }}"
+
+    - name: Install required utilities on macOS
+      when: is_macos
+      community.general.homebrew:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - e2fsprogs
+        - coreutils
+        - shrinkfs
+        - zstd
+
+    - name: Install required utilities on Debian/Ubuntu
+      when: ansible_os_family == 'Debian'
+      apt:
+        name:
+          - e2fsprogs
+          - coreutils
+          - resize2fs
+          - zstd
+        state: present
+        update_cache: yes
+
+    - name: Install required utilities on RedHat/CentOS
+      when: ansible_os_family == 'RedHat'
+      yum:
+        name:
+          - e2fsprogs
+          - coreutils
+          - resize2fs
+          - zstd
+        state: present
+
+    - name: Create image of the SD card
+      command: "dd if={{ sd_card_device }} of={{ image_path }} bs=4M status=progress"
+      async: 3600
+      poll: 5
+
+    - name: Check and repair the filesystem
+      command: "e2fsck -f -C 0 {{ image_path }}"
+      async: 3600
+      poll: 5
+
+    - name: Shrink filesystem to minimum size
+      command: "resize2fs -M {{ image_path }}"
+      async: 3600
+      poll: 5
+
+    - name: Shrink partition to match filesystem size
+      command: "shrinkfs --shrink {{ image_path }}"
+      async: 3600
+      poll: 5
+
+    - name: Compress the image
+      shell: "zstd -{{ zstd_compression_level }} -o {{ image_file }} {{ image_path }}"
+      async: 3600
+      poll: 30
+
+    - name: Clean up mount point
+      file:
+        path: "{{ mount_point }}"
+        state: absent
+
+    - name: Notify completion
+      debug:
+        msg: "Filesystem shrunk and image compressed. Saved to {{ output_dir }}."

@@ -1,8 +1,9 @@
 # README: This script will handle the instalation of Ansible on a CLEAN target machine.
-# it uses direct commands to achieve this and not need python to be previously installed
-- hosts: all
-  become: yes
-  gather_facts: no
+# it uses direct commands to achieve this and DOES not need python to be previously installed
+- name: Bootstrap Ansible
+  hosts: all
+  become: true
+  gather_facts: false
   tasks:
     - name: Check if the system is Debian-based
       ansible.builtin.raw: cat /etc/os-release
@@ -53,6 +54,7 @@
       ansible.builtin.include_tasks: darwin.yaml
       when: os_type == 'darwin'
 
+    # Now just run a command to gather facts, testing the above
     - name: Gather facts
       ansible.builtin.setup:
         gather_subset: "all"

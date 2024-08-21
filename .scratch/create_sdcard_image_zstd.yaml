@@ -58,3 +58,7 @@
     - name: Notify completion
       debug:
         msg: "Partition table and partitions compressed and saved in {{ output_dir }}."
+
+
+
+dd if="/dev/disk4" bs=4M | zstd -9 -o ./rpi-5.base_test.zst
