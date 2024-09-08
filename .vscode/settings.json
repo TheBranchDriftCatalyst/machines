@@ -3,5 +3,8 @@
     "yaml.schemas": {
         "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/galaxy.json": "file:///Users/panda/catalyst-devspace/repos/common/machines/collections/catalyst_pi/galaxy.yaml",
         "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/tasks": "file:///Users/panda/catalyst-devspace/repos/common/machines/collections/image_dev/create_sdcard_image_zstd.yaml"
-    }
+    },
+    "cSpell.words": [
+        "localdomain"
+    ]
 }

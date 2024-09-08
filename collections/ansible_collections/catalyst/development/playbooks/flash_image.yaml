@@ -1,0 +1,1 @@
+This playbook should take a shrunk image of a device (in this case a Raspberry Pi SD, or esp32) and flash it to the desired SDcard device using the vars ../vars/image_vars.yaml file.

@@ -11,6 +11,11 @@ It also contains tools for managing and developmenet of raw .imgs and other
 
 ---
 
+## TODO
+
+- create test command/framework
+- create github install framework (galaxy)
+
 ## Old Readme Stuff Below (to be removed/moved)
 
 Generic base git template repository

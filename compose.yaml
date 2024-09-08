@@ -10,13 +10,14 @@ services:
      POSTGRES_USER: semaphore
      POSTGRES_PASSWORD: semaphore
      POSTGRES_DB: semaphore
+     
   semaphore:
     restart: unless-stopped
     ports:
       - 3030:3000
     image: semaphoreui/semaphore:latest
-    volumes:
-     - ./:/catalyst
+    # volumes:
+    #  - ./:/catalyst
     environment:
       SEMAPHORE_DB_USER: semaphore
       SEMAPHORE_DB_PASS: semaphore
@@ -39,7 +40,7 @@ services:
       # SEMAPHORE_LDAP_PASSWORD: 'ldap_bind_account_password'
       # SEMAPHORE_LDAP_DN_SEARCH: 'dc=local,dc=example,dc=com'
       # SEMAPHORE_LDAP_SEARCH_FILTER: "(\u0026(uid=%s)(memberOf=cn=ipausers,cn=groups,cn=accounts,dc=local,dc=example,dc=com))"
-      TZ: UTC
+      TZ: America/Denver
     depends_on:
       - postgres # for postgres, change to: postgres
 volumes:

@@ -1,38 +1,34 @@
 homelab:
   hosts:
     truenas.localdomain:
-
     drogon.localdomain:
+
+dev_machines:
+  hosts:
+    pandas-mbp.localdomain:
 
 windows:
   hosts:
     gamer007.localdomain:
-      ansible_user: your_username
-      ansible_password: your_password
     mjolnir.localdomain:
-      ansible_user: your_username
-      ansible_password: your_password
     conan.localdomain:
-      ansible_user: your_username
-      ansible_password: your_password
+
+pi_cluster:
+  hosts:
+    pi_master:
+      ansible_host: rp0.localdomain
+    rp[1:7].localdomain:
+      ansible_host: rp{{ item }}.localdomain
+
+web_servers:
+  children:
+    homelab:
+    pi_cluster:
+    dev_machines:
 
 all:
   children:
-    swarm_nodes:
-      hosts:
-        # master_node:
-        #   ansible_host: drogon.localdomain
-        #   # ansible_user: your_user
-        # rp4-[1:3]:  # Adjust the range as needed
-        #   ansible_host: worker_ip{{ item }}
-        #   # ansible_user: your_user
-
-        master_node:
-          ansible_host: drogon.localdomain
-          ansible_user: panda
-        rpi4-0:
-          ansible_host: drogon.localdomain
-          ansible_user: panda
-        # pi[1:3]:  # Adjust the range as needed
-        #   ansible_host: worker_ip{{ item }}
-        #   ansible_user: panda
+    windows:
+    pi_cluster:
+    dev_machines:
+    homelab:

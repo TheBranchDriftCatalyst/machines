@@ -15,6 +15,23 @@ files = [
 ansible-core = ">=2.17.3,<2.18.0"
 
 [[package]]
+name = "ansible-builder"
+version = "3.1.0"
+description = "\"A tool for building Ansible Execution Environments\""
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "ansible_builder-3.1.0-py3-none-any.whl", hash = "sha256:ed4a6717dd466c2fc2cbdd7c9a9b5323260275a13fcf20cf6fe9a807f8c8ad3f"},
+    {file = "ansible_builder-3.1.0.tar.gz", hash = "sha256:d2dc573e26a7bd5095e98aeb37ee9b00bc9f5005abea7147d74229c0f3426fcb"},
+]
+
+[package.dependencies]
+bindep = "*"
+jsonschema = "*"
+packaging = "*"
+PyYAML = "*"
+
+[[package]]
 name = "ansible-compat"
 version = "24.8.0"
 description = "Ansible compatibility goodies"
@@ -55,6 +72,74 @@ PyYAML = ">=5.1"
 resolvelib = ">=0.5.3,<1.1.0"
 
 [[package]]
+name = "ansible-creator"
+version = "24.8.0"
+description = "A CLI tool for scaffolding Ansible Content."
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "ansible_creator-24.8.0-py3-none-any.whl", hash = "sha256:89fa2478ef5d3c2517bb1ce9883341713fc021430a172a60536c7bc4a3b24591"},
+    {file = "ansible_creator-24.8.0.tar.gz", hash = "sha256:51bd406fe06006657bdeb2ee48edb53082d564f06e2ed876be771ef20cf9b331"},
+]
+
+[package.dependencies]
+Jinja2 = ">=3.1.2"
+PyYAML = "*"
+
+[package.extras]
+docs = ["mkdocs-ansible (>=24.3.0)", "pipdeptree (>=2.7.1)"]
+test = ["ansible-lint", "argcomplete", "black", "coverage[toml]", "mypy", "pip-tools", "pre-commit", "pydoclint", "pylint", "pytest", "pytest-xdist", "ruff", "toml-sort", "tox", "types-PyYAML"]
+
+[[package]]
+name = "ansible-dev-environment"
+version = "24.7.0"
+description = "A pip-like ansible collection installer."
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "ansible_dev_environment-24.7.0-py3-none-any.whl", hash = "sha256:9f4bd3f69b829b0f216996cec860ca73b3c60ec7fb4f25bad948c43c2bfa81f4"},
+    {file = "ansible_dev_environment-24.7.0.tar.gz", hash = "sha256:c23dd6a9b25016ea2b53d12012fd1ecb0619bd4fb4a3e74f7b8a65c2e24cd189"},
+]
+
+[package.dependencies]
+ansible-builder = "*"
+pyyaml = "*"
+subprocess-tee = "*"
+
+[package.extras]
+docs = ["mkdocs-ansible (>=24.3.0)"]
+test = ["black", "coverage[toml]", "mypy", "pip-tools", "pre-commit", "pydoclint", "pylint", "pytest", "pytest-xdist", "ruff", "toml-sort", "tox", "types-PyYAML"]
+
+[[package]]
+name = "ansible-dev-tools"
+version = "24.8.0"
+description = "Ansible Developtment Tools kit bundles all tools needed for content creation and testing."
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "ansible_dev_tools-24.8.0-py3-none-any.whl", hash = "sha256:9cb2d40e7f71a590b44d6fe061a6e7cbe326054eb153451eb0de02feab845360"},
+    {file = "ansible_dev_tools-24.8.0.tar.gz", hash = "sha256:aef4029ece8cbd7e00096e5087643a2d286919efda77a513da70310a146734df"},
+]
+
+[package.dependencies]
+ansible-builder = "*"
+ansible-creator = ">=24.4.1"
+ansible-dev-environment = "*"
+ansible-lint = "*"
+ansible-navigator = "*"
+ansible-sign = "*"
+molecule = "*"
+pytest-ansible = "*"
+setuptools = "*"
+tox-ansible = "*"
+
+[package.extras]
+docs = ["mkdocs-ansible (>=0.2.0)"]
+lock = ["ansible-builder (==3.1.0)", "ansible-compat (==24.7.0)", "ansible-core (==2.17.3)", "ansible-creator (==24.8.0)", "ansible-dev-environment (==24.7.0)", "ansible-lint (==24.7.0)", "ansible-navigator (==24.8.0)", "ansible-runner (==2.4.0)", "ansible-sign (==0.1.1)", "asgiref (==3.8.1)", "attrs (==24.2.0)", "bindep (==2.11.0)", "black (==24.8.0)", "bracex (==2.5)", "cachetools (==5.4.0)", "certifi (==2024.7.4)", "cffi (==1.17.0)", "chardet (==5.2.0)", "charset-normalizer (==3.3.2)", "click (==8.1.7)", "click-help-colors (==0.9.4)", "colorama (==0.4.6)", "cryptography (==43.0.0)", "distlib (==0.3.8)", "distro (==1.9.0)", "django (==5.1)", "docutils (==0.21.2)", "enrich (==1.2.7)", "exceptiongroup (==1.2.2)", "execnet (==2.1.1)", "filelock (==3.15.4)", "gunicorn (==23.0.0)", "idna (==3.7)", "importlib-metadata (==8.2.0)", "iniconfig (==2.0.0)", "isodate (==0.6.1)", "jinja2 (==3.1.4)", "jsonschema (==4.23.0)", "jsonschema-path (==0.3.3)", "jsonschema-specifications (==2023.12.1)", "lazy-object-proxy (==1.10.0)", "lockfile (==0.12.2)", "markdown-it-py (==3.0.0)", "markupsafe (==2.1.5)", "mdurl (==0.1.2)", "molecule (==24.7.0)", "more-itertools (==10.4.0)", "mypy-extensions (==1.0.0)", "onigurumacffi (==1.3.0)", "openapi-core (==0.19.3)", "openapi-schema-validator (==0.6.2)", "openapi-spec-validator (==0.7.1)", "packaging (==24.1)", "parse (==1.20.2)", "parsley (==1.3)", "pathable (==0.4.3)", "pathspec (==0.12.1)", "pbr (==6.0.0)", "pexpect (==4.9.0)", "platformdirs (==4.2.2)", "pluggy (==1.5.0)", "ptyprocess (==0.7.0)", "pycparser (==2.22)", "pygments (==2.18.0)", "pyproject-api (==1.7.1)", "pytest (==8.3.2)", "pytest-ansible (==24.8.0)", "pytest-xdist (==3.6.1)", "python-daemon (==3.0.1)", "python-gnupg (==0.5.2)", "pyyaml (==6.0.2)", "referencing (==0.31.1)", "requests (==2.32.3)", "resolvelib (==1.0.1)", "rfc3339-validator (==0.1.4)", "rich (==13.7.1)", "rpds-py (==0.20.0)", "ruamel-yaml (==0.18.6)", "ruamel-yaml-clib (==0.2.8)", "six (==1.16.0)", "sqlparse (==0.5.1)", "subprocess-tee (==0.4.2)", "tomli (==2.0.1)", "tox (==4.18.0)", "tox-ansible (==24.8.0)", "typing-extensions (==4.12.2)", "tzdata (==2024.1)", "urllib3 (==2.2.2)", "virtualenv (==20.26.3)", "wcmatch (==9.0)", "werkzeug (==3.0.3)", "yamllint (==1.35.1)", "zipp (==3.20.0)"]
+server = ["django (>4.1,<5.2)", "gunicorn", "openapi-core (>=0.19.1)"]
+test = ["ansible-dev-tools[server]", "black", "coverage[toml]", "django-stubs[compatible-mypy]", "libtmux", "mypy", "pip-tools", "pre-commit", "pydoclint", "pylint", "pytest", "pytest-xdist", "requests", "ruff", "toml-sort", "tox", "types-pyyaml", "types-requests"]
+
+[[package]]
 name = "ansible-lint"
 version = "6.8.7"
 description = "Checks playbooks for practices and behavior that could potentially be improved"
@@ -83,6 +168,66 @@ docs = ["myst-parser (>=0.16.1)", "pipdeptree (>=2.2.1)", "sphinx (>=4.4.0)", "s
 test = ["black", "coverage-enable-subprocess", "coverage[toml] (>=6.4.4)", "flake8", "flake8-future-annotations", "flaky (>=3.7.0)", "mypy", "psutil", "pylint", "pytest (>=7.2.0)", "pytest-mock", "pytest-plus (>=0.2)", "pytest-xdist (>=2.1.0)"]
 
 [[package]]
+name = "ansible-navigator"
+version = "3.4.1"
+description = "A text-based user interface (TUI) for the Red Hat Ansible Automation Platform"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "ansible-navigator-3.4.1.tar.gz", hash = "sha256:efd3b9a1224e1ad67ae8c40ccf833117443495c95b2896b033a89bf0e0325634"},
+    {file = "ansible_navigator-3.4.1-py3-none-any.whl", hash = "sha256:041588b22d16f3272f5ba5b20036cb6b88ae71001ee1c36511330256d0fde6a2"},
+]
+
+[package.dependencies]
+ansible-builder = ">=3.0.0"
+ansible-runner = ">=2.3.1,<3"
+jinja2 = "*"
+jsonschema = "*"
+onigurumacffi = ">=1.1.0,<2"
+pyyaml = "*"
+setuptools = {version = ">=63.1.0", markers = "python_version >= \"3.11\""}
+tzdata = "*"
+
+[package.extras]
+docs = ["mkdocs-ansible (>=0.1.2)"]
+test = ["ansible-core", "coverage-enable-subprocess", "coverage[toml] (>=7.0.0b1)", "darglint", "flake8-docstrings", "libtmux", "pre-commit", "pytest-mock", "pytest-plus", "pytest-subtests", "pytest-xdist", "typing-extensions"]
+
+[[package]]
+name = "ansible-runner"
+version = "2.4.0"
+description = "\"Consistent Ansible Python API and CLI with container and process isolation runtime capabilities\""
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "ansible-runner-2.4.0.tar.gz", hash = "sha256:82d02b2548830f37a53517b65c823c4af371069406c7d213b5c9041d45e0c5b6"},
+    {file = "ansible_runner-2.4.0-py3-none-any.whl", hash = "sha256:a3f592ae4cdfa62a72ad15de60da9c8210f376d67f495c4a78d4cf1dc7ccdf89"},
+]
+
+[package.dependencies]
+packaging = "*"
+pexpect = ">=4.5"
+python-daemon = "*"
+pyyaml = "*"
+
+[[package]]
+name = "ansible-sign"
+version = "0.1.1"
+description = "Ansible content validation library and CLI"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ansible-sign-0.1.1.tar.gz", hash = "sha256:9dc39087712c2488fd6b325e06875a6ced378915ba5b8bebc3c6b0f6a53747b8"},
+    {file = "ansible_sign-0.1.1-py3-none-any.whl", hash = "sha256:211d7d66be397b73d38f02806ad1cf6f983679669251c3f56929ed95112a3714"},
+]
+
+[package.dependencies]
+distlib = "*"
+python-gnupg = "*"
+
+[package.extras]
+testing = ["pytest", "pytest-cov", "setuptools"]
+
+[[package]]
 name = "attrs"
 version = "24.2.0"
 description = "Classes Without Boilerplate"
@@ -100,6 +245,23 @@ dev = ["cloudpickle", "hypothesis", "mypy (>=1.11.1)", "pre-commit", "pympler", 
 docs = ["cogapp", "furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 tests = ["cloudpickle", "hypothesis", "mypy (>=1.11.1)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-xdist[psutil]"]
 tests-mypy = ["mypy (>=1.11.1)", "pytest-mypy-plugins"]
+
+[[package]]
+name = "bindep"
+version = "2.11.0"
+description = "Binary dependency utility"
+optional = false
+python-versions = "*"
+files = [
+    {file = "bindep-2.11.0-py2.py3-none-any.whl", hash = "sha256:6abe2f721e5388b518affb8bf8c8945977e75e88803e229799b3599a6da32b01"},
+    {file = "bindep-2.11.0.tar.gz", hash = "sha256:acb2f259bce1fd1508873479609bbde5b9aae508378476a68d6b6a19002e7e2f"},
+]
+
+[package.dependencies]
+distro = {version = ">=1.7.0", markers = "python_version >= \"3.6\""}
+packaging = {version = "*", markers = "python_version >= \"3.6\""}
+Parsley = "*"
+pbr = ">=2.0.0"
 
 [[package]]
 name = "black"
@@ -154,6 +316,17 @@ python-versions = ">=3.8"
 files = [
     {file = "bracex-2.5-py3-none-any.whl", hash = "sha256:d2fcf4b606a82ac325471affe1706dd9bbaa3536c91ef86a31f6b766f3dad1d0"},
     {file = "bracex-2.5.tar.gz", hash = "sha256:0725da5045e8d37ea9592ab3614d8b561e22c3c5fde3964699be672e072ab611"},
+]
+
+[[package]]
+name = "cachetools"
+version = "5.5.0"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "cachetools-5.5.0-py3-none-any.whl", hash = "sha256:02134e8439cdc2ffb62023ce1debca2944c3f289d66bb17ead3ab3dede74b292"},
+    {file = "cachetools-5.5.0.tar.gz", hash = "sha256:2cc24fb4cbe39633fb7badd9db9ca6295d766d9c2995f245725a46715d050f2a"},
 ]
 
 [[package]]
@@ -245,6 +418,17 @@ files = [
 
 [package.dependencies]
 pycparser = "*"
+
+[[package]]
+name = "chardet"
+version = "5.2.0"
+description = "Universal encoding detector for Python 3"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970"},
+    {file = "chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7"},
+]
 
 [[package]]
 name = "charset-normalizer"
@@ -437,6 +621,17 @@ test = ["certifi", "cryptography-vectors (==43.0.0)", "pretend", "pytest (>=6.2.
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "distlib"
+version = "0.3.8"
+description = "Distribution utilities"
+optional = false
+python-versions = "*"
+files = [
+    {file = "distlib-0.3.8-py2.py3-none-any.whl", hash = "sha256:034db59a0b96f8ca18035f36290806a9a6e6bd9d1ff91e45a7f172eb17e51784"},
+    {file = "distlib-0.3.8.tar.gz", hash = "sha256:1530ea13e350031b6312d8580ddb6b27a104275a31106523b8f123787f494f64"},
+]
+
+[[package]]
 name = "distro"
 version = "1.9.0"
 description = "Distro - an OS platform information API"
@@ -470,6 +665,17 @@ ssh = ["paramiko (>=2.4.3)"]
 websockets = ["websocket-client (>=1.3.0)"]
 
 [[package]]
+name = "docutils"
+version = "0.21.2"
+description = "Docutils -- Python Documentation Utilities"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "docutils-0.21.2-py3-none-any.whl", hash = "sha256:dafca5b9e384f0e419294eb4d2ff9fa826435bf15f15b7bd45723e8ad76811b2"},
+    {file = "docutils-0.21.2.tar.gz", hash = "sha256:3a6b18732edf182daa3cd12775bbb338cf5691468f91eeeb109deff6ebfa986f"},
+]
+
+[[package]]
 name = "enrich"
 version = "1.2.7"
 description = "enrich"
@@ -485,6 +691,20 @@ rich = ">=9.5.1"
 
 [package.extras]
 test = ["mock (>=3.0.5)", "pytest (>=5.4.0)", "pytest-cov (>=2.7.1)", "pytest-mock (>=3.3.1)", "pytest-plus", "pytest-xdist (>=1.29.0)"]
+
+[[package]]
+name = "execnet"
+version = "2.1.1"
+description = "execnet: rapid multi-Python deployment"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "execnet-2.1.1-py3-none-any.whl", hash = "sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc"},
+    {file = "execnet-2.1.1.tar.gz", hash = "sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3"},
+]
+
+[package.extras]
+testing = ["hatch", "pre-commit", "pytest", "tox"]
 
 [[package]]
 name = "filelock"
@@ -575,6 +795,17 @@ files = [
 
 [package.dependencies]
 referencing = ">=0.31.0"
+
+[[package]]
+name = "lockfile"
+version = "0.12.2"
+description = "Platform-independent file locking module"
+optional = false
+python-versions = "*"
+files = [
+    {file = "lockfile-0.12.2-py2.py3-none-any.whl", hash = "sha256:6c3cb24f344923d30b2785d5ad75182c8ea7ac1b6171b08657258ec7429d50fa"},
+    {file = "lockfile-0.12.2.tar.gz", hash = "sha256:6aed02de03cba24efabcd600b30540140634fc06cfa603822d508d5361e9f799"},
+]
 
 [[package]]
 name = "markdown-it-py"
@@ -744,6 +975,27 @@ files = [
 ]
 
 [[package]]
+name = "onigurumacffi"
+version = "1.3.0"
+description = "python cffi bindings for the oniguruma regex engine"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "onigurumacffi-1.3.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:63097f9963c7d47ee4c4106bfa0bb9be59b37d8e194c892e3f617ec964ab7ddb"},
+    {file = "onigurumacffi-1.3.0-cp38-abi3-macosx_11_0_x86_64.whl", hash = "sha256:77d3f174df2195f2af5968170a5286094c30f32f5d80a6c9c7df90fcdd4b545c"},
+    {file = "onigurumacffi-1.3.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2fc00956c5e824373f5b59c1714470472f8df162db773166aeae9cc4d80a1245"},
+    {file = "onigurumacffi-1.3.0-cp38-abi3-win32.whl", hash = "sha256:31a22befe51ce2ce0c56936edeccbbca5f8e63c0808baf8e108e04642edc5091"},
+    {file = "onigurumacffi-1.3.0-cp38-abi3-win_amd64.whl", hash = "sha256:45fcb24ebce96e884c34e5b93e46b371e21a9a4cb85c386a3359a5eacab31575"},
+    {file = "onigurumacffi-1.3.0-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5b2187f4722ffee8b1e7e529d1998c8abb2236da19bafc59bce881c335f53d6e"},
+    {file = "onigurumacffi-1.3.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:094b22f59bbc12812272686e468e3956a8a34262f3ee79e6ebea60ac12756713"},
+    {file = "onigurumacffi-1.3.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7c1f34f9f6cd5185a1ed1146ccbf2e9d808b508816a13b6ed8b1550e2a246f79"},
+    {file = "onigurumacffi-1.3.0.tar.gz", hash = "sha256:7745cdc56096acec88a1f3b08660a22b09c659ed38d3f59db6c1cad76a976bef"},
+]
+
+[package.dependencies]
+cffi = ">=1"
+
+[[package]]
 name = "packaging"
 version = "24.1"
 description = "Core utilities for Python packages"
@@ -752,6 +1004,17 @@ python-versions = ">=3.8"
 files = [
     {file = "packaging-24.1-py3-none-any.whl", hash = "sha256:5b8f2217dbdbd2f7f384c41c628544e6d52f2d0f53c6d0c3ea61aa5d1d7ff124"},
     {file = "packaging-24.1.tar.gz", hash = "sha256:026ed72c8ed3fcce5bf8950572258698927fd1dbda10a5e981cdf0ac37f4f002"},
+]
+
+[[package]]
+name = "parsley"
+version = "1.3"
+description = "Parsing and pattern matching made easy."
+optional = false
+python-versions = "*"
+files = [
+    {file = "Parsley-1.3-py2.py3-none-any.whl", hash = "sha256:c3bc417b8c7e3a96c87c0f2f751bfd784ed5156ffccebe2f84330df5685f8dc3"},
+    {file = "Parsley-1.3.tar.gz", hash = "sha256:9444278d47161d5f2be76a767809a3cbe6db4db822f46a4fd7481d4057208d41"},
 ]
 
 [[package]]
@@ -764,6 +1027,31 @@ files = [
     {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
     {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
 ]
+
+[[package]]
+name = "pbr"
+version = "6.1.0"
+description = "Python Build Reasonableness"
+optional = false
+python-versions = ">=2.6"
+files = [
+    {file = "pbr-6.1.0-py2.py3-none-any.whl", hash = "sha256:a776ae228892d8013649c0aeccbb3d5f99ee15e005a4cbb7e61d55a067b28a2a"},
+    {file = "pbr-6.1.0.tar.gz", hash = "sha256:788183e382e3d1d7707db08978239965e8b9e4e5ed42669bf4758186734d5f24"},
+]
+
+[[package]]
+name = "pexpect"
+version = "4.9.0"
+description = "Pexpect allows easy control of interactive console applications."
+optional = false
+python-versions = "*"
+files = [
+    {file = "pexpect-4.9.0-py2.py3-none-any.whl", hash = "sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523"},
+    {file = "pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f"},
+]
+
+[package.dependencies]
+ptyprocess = ">=0.5"
 
 [[package]]
 name = "platformdirs"
@@ -797,6 +1085,17 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
+name = "ptyprocess"
+version = "0.7.0"
+description = "Run a subprocess in a pseudo terminal"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35"},
+    {file = "ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"},
+]
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 description = "C parser in Python"
@@ -822,6 +1121,24 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
+name = "pyproject-api"
+version = "1.7.1"
+description = "API to interact with the python pyproject.toml based projects"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pyproject_api-1.7.1-py3-none-any.whl", hash = "sha256:2dc1654062c2b27733d8fd4cdda672b22fe8741ef1dde8e3a998a9547b071eeb"},
+    {file = "pyproject_api-1.7.1.tar.gz", hash = "sha256:7ebc6cd10710f89f4cf2a2731710a98abce37ebff19427116ff2174c9236a827"},
+]
+
+[package.dependencies]
+packaging = ">=24.1"
+
+[package.extras]
+docs = ["furo (>=2024.5.6)", "sphinx-autodoc-typehints (>=2.2.1)"]
+testing = ["covdefaults (>=2.3)", "pytest (>=8.2.2)", "pytest-cov (>=5)", "pytest-mock (>=3.14)", "setuptools (>=70.1)"]
+
+[[package]]
 name = "pytest"
 version = "8.3.2"
 description = "pytest: simple powerful testing with Python"
@@ -840,6 +1157,27 @@ pluggy = ">=1.5,<2"
 
 [package.extras]
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+
+[[package]]
+name = "pytest-ansible"
+version = "24.8.0"
+description = "Plugin for pytest to simplify calling ansible modules from tests or fixtures"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "pytest_ansible-24.8.0-py3-none-any.whl", hash = "sha256:ee2a508de6e1cc59c3a120acd0b995d653c39fe552097d97905fc5e3bca00e10"},
+    {file = "pytest_ansible-24.8.0.tar.gz", hash = "sha256:d3c17daf6ad09c63f155bb14054a6ce536a00788e9312bdbddc384fd7467c0c6"},
+]
+
+[package.dependencies]
+ansible-compat = ">=4.1.11"
+ansible-core = ">=2.14"
+packaging = "*"
+pytest = ">=6"
+
+[package.extras]
+docs = ["mkdocs-ansible (>=0.2.0)", "pipdeptree (>=2.7.1)"]
+test = ["ansible-core", "black", "coverage[toml]", "molecule", "mypy", "pip-tools", "pre-commit", "pydoclint", "pylint", "pytest", "pytest-xdist", "ruff", "toml-sort", "tox", "types-PyYAML"]
 
 [[package]]
 name = "pytest-html"
@@ -899,6 +1237,57 @@ ansi = ["ansi2html"]
 docker = ["molecule-docker", "paramiko (>=2.5.0)"]
 podman = ["molecule-podman"]
 vagrant = ["molecule-vagrant"]
+
+[[package]]
+name = "pytest-xdist"
+version = "3.6.1"
+description = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest_xdist-3.6.1-py3-none-any.whl", hash = "sha256:9ed4adfb68a016610848639bb7e02c9352d5d9f03d04809919e2dafc3be4cca7"},
+    {file = "pytest_xdist-3.6.1.tar.gz", hash = "sha256:ead156a4db231eec769737f57668ef58a2084a34b2e55c4a8fa20d861107300d"},
+]
+
+[package.dependencies]
+execnet = ">=2.1"
+pytest = ">=7.0.0"
+
+[package.extras]
+psutil = ["psutil (>=3.0)"]
+setproctitle = ["setproctitle"]
+testing = ["filelock"]
+
+[[package]]
+name = "python-daemon"
+version = "3.0.1"
+description = "Library to implement a well-behaved Unix daemon process."
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "python-daemon-3.0.1.tar.gz", hash = "sha256:6c57452372f7eaff40934a1c03ad1826bf5e793558e87fef49131e6464b4dae5"},
+    {file = "python_daemon-3.0.1-py3-none-any.whl", hash = "sha256:42bb848a3260a027fa71ad47ecd959e471327cb34da5965962edd5926229f341"},
+]
+
+[package.dependencies]
+docutils = "*"
+lockfile = ">=0.10"
+setuptools = ">=62.4.0"
+
+[package.extras]
+devel = ["coverage", "docutils", "isort", "testscenarios (>=0.4)", "testtools", "twine"]
+test = ["coverage", "docutils", "testscenarios (>=0.4)", "testtools"]
+
+[[package]]
+name = "python-gnupg"
+version = "0.5.2"
+description = "A wrapper for the Gnu Privacy Guard (GPG or GnuPG)"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-gnupg-0.5.2.tar.gz", hash = "sha256:01d8013931c9fa3f45824bbea7054c03d6e11f258a72e7e086e168dbcb91854c"},
+    {file = "python_gnupg-0.5.2-py2.py3-none-any.whl", hash = "sha256:72ce142af6da7f07e433fef148b445fb3e07854acd2f88739008838745c0e9f5"},
+]
 
 [[package]]
 name = "pywin32"
@@ -1260,6 +1649,26 @@ files = [
 distro = ">=1.3.0"
 
 [[package]]
+name = "setuptools"
+version = "74.0.0"
+description = "Easily download, build, install, upgrade, and uninstall Python packages"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "setuptools-74.0.0-py3-none-any.whl", hash = "sha256:0274581a0037b638b9fc1c6883cc71c0210865aaa76073f7882376b641b84e8f"},
+    {file = "setuptools-74.0.0.tar.gz", hash = "sha256:a85e96b8be2b906f3e3e789adec6a9323abf79758ecfa3065bd740d81158b11e"},
+]
+
+[package.extras]
+check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)", "ruff (>=0.5.2)"]
+core = ["importlib-metadata (>=6)", "importlib-resources (>=5.10.2)", "jaraco.text (>=3.7)", "more-itertools (>=8.8)", "packaging (>=24)", "platformdirs (>=2.6.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
+cover = ["pytest-cov"]
+doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
+enabler = ["pytest-enabler (>=2.2)"]
+test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "jaraco.test", "packaging (>=23.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
+type = ["importlib-metadata (>=7.0.2)", "jaraco.develop (>=7.21)", "mypy (==1.11.*)", "pytest-mypy"]
+
+[[package]]
 name = "subprocess-tee"
 version = "0.4.2"
 description = "subprocess-tee"
@@ -1273,6 +1682,65 @@ files = [
 [package.extras]
 docs = ["argparse-manpage", "cairosvg", "markdown-include", "mkdocs", "mkdocs-git-revision-date-localized-plugin", "mkdocs-material", "mkdocs-material-extensions", "mkdocstrings", "mkdocstrings-python", "pillow", "pymdown-extensions"]
 test = ["enrich (>=1.2.6)", "molecule (>=3.4.0)", "pytest (>=6.2.5)", "pytest-cov (>=2.12.1)", "pytest-plus (>=0.2)", "pytest-xdist (>=2.3.0)"]
+
+[[package]]
+name = "tox"
+version = "4.18.0"
+description = "tox is a generic virtualenv management and test command line tool"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "tox-4.18.0-py3-none-any.whl", hash = "sha256:0a457400cf70615dc0627eb70d293e80cd95d8ce174bb40ac011011f0c03a249"},
+    {file = "tox-4.18.0.tar.gz", hash = "sha256:5dfa1cab9f146becd6e351333a82f9e0ade374451630ba65ee54584624c27b58"},
+]
+
+[package.dependencies]
+cachetools = ">=5.4"
+chardet = ">=5.2"
+colorama = ">=0.4.6"
+filelock = ">=3.15.4"
+packaging = ">=24.1"
+platformdirs = ">=4.2.2"
+pluggy = ">=1.5"
+pyproject-api = ">=1.7.1"
+virtualenv = ">=20.26.3"
+
+[package.extras]
+docs = ["furo (>=2024.7.18)", "sphinx (>=7.4.7)", "sphinx-argparse-cli (>=1.16)", "sphinx-autodoc-typehints (>=2.2.3)", "sphinx-copybutton (>=0.5.2)", "sphinx-inline-tabs (>=2023.4.21)", "sphinxcontrib-towncrier (>=0.2.1a0)", "towncrier (>=23.11)"]
+testing = ["build[virtualenv] (>=1.2.1)", "covdefaults (>=2.3)", "detect-test-pollution (>=1.2)", "devpi-process (>=1)", "diff-cover (>=9.1.1)", "distlib (>=0.3.8)", "flaky (>=3.8.1)", "hatch-vcs (>=0.4)", "hatchling (>=1.25)", "psutil (>=6)", "pytest (>=8.3.2)", "pytest-cov (>=5)", "pytest-mock (>=3.14)", "pytest-xdist (>=3.6.1)", "re-assert (>=1.1)", "setuptools (>=70.3)", "time-machine (>=2.14.2)", "wheel (>=0.43)"]
+
+[[package]]
+name = "tox-ansible"
+version = "24.8.0"
+description = "A radical approach to testing ansible content"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "tox_ansible-24.8.0-py3-none-any.whl", hash = "sha256:4b57e445a1efb65642fe60e3632faa0848b86cc8be0289f696f8c9349c1348b0"},
+    {file = "tox_ansible-24.8.0.tar.gz", hash = "sha256:3210cd82d2465f55573f46068d11bb0dc77cf62b432234c9be43e5121176ad7c"},
+]
+
+[package.dependencies]
+pytest = "*"
+pytest-ansible = ">=3.1.0"
+pytest-xdist = "*"
+pyyaml = "*"
+tox = ">=4.15.1"
+
+[package.extras]
+docs = ["mkdocs-ansible (>=0.2.0)", "pipdeptree (>=2.7.1)"]
+test = ["ansible-core", "black", "coverage[toml]", "mypy", "pip-tools", "pre-commit", "pydoclint", "pylint", "pytest", "pytest-xdist", "ruff", "toml-sort", "tox", "types-PyYAML"]
+
+[[package]]
+name = "tzdata"
+version = "2024.1"
+description = "Provider of IANA time zone data"
+optional = false
+python-versions = ">=2"
+files = [
+    {file = "tzdata-2024.1-py2.py3-none-any.whl", hash = "sha256:9068bc196136463f5245e51efda838afa15aaeca9903f49050dfa2679db4d252"},
+    {file = "tzdata-2024.1.tar.gz", hash = "sha256:2674120f8d891909751c38abcdfd386ac0a5a1127954fbc332af6b5ceae07efd"},
+]
 
 [[package]]
 name = "urllib3"
@@ -1290,6 +1758,26 @@ brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)"]
 h2 = ["h2 (>=4,<5)"]
 socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
+
+[[package]]
+name = "virtualenv"
+version = "20.26.3"
+description = "Virtual Python Environment builder"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "virtualenv-20.26.3-py3-none-any.whl", hash = "sha256:8cc4a31139e796e9a7de2cd5cf2489de1217193116a8fd42328f1bd65f434589"},
+    {file = "virtualenv-20.26.3.tar.gz", hash = "sha256:4c43a2a236279d9ea36a0d76f98d84bd6ca94ac4e0f4a3b9d46d05e10fea542a"},
+]
+
+[package.dependencies]
+distlib = ">=0.3.7,<1"
+filelock = ">=3.12.2,<4"
+platformdirs = ">=3.9.1,<5"
+
+[package.extras]
+docs = ["furo (>=2023.7.26)", "proselint (>=0.13)", "sphinx (>=7.1.2,!=7.3)", "sphinx-argparse (>=0.4)", "sphinxcontrib-towncrier (>=0.2.1a0)", "towncrier (>=23.6)"]
+test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7)", "packaging (>=23.1)", "pytest (>=7.4)", "pytest-env (>=0.8.2)", "pytest-freezer (>=0.4.8)", "pytest-mock (>=3.11.1)", "pytest-randomly (>=3.12)", "pytest-timeout (>=2.1)", "setuptools (>=68)", "time-machine (>=2.10)"]
 
 [[package]]
 name = "wcmatch"
@@ -1326,4 +1814,4 @@ dev = ["doc8", "flake8", "flake8-import-order", "rstcheck[sphinx]", "sphinx"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "be061a77dad829836c27ef634e5caadc73cd81f2358fa1e791666d5c32bec548"
+content-hash = "07c71354f7ab9fcd8431fe178ca4a09dc412839a2ccea6921cd0029094317bca"
