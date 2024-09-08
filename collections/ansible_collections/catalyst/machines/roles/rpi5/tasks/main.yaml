@@ -1,6 +1,0 @@
-- name: Include mount tasks
-  ansible.builtin.include_tasks: mount.yaml
-# - name: Include modify tasks
-#   ansible.builtin.include_tasks: modify.yaml
-# - name: Include compress tasks
-#   ansible.builtin.include_tasks: compress.yaml

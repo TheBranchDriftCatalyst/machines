@@ -10,22 +10,26 @@
     github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
     hostname: "{{ ansible_facts['hostname'] }}"
   tasks:
-    - name: Update apt repository cache
-      become: true
+    - name: Install Git and OpenSSH client on non-Darwin (Linux)
+      when: ansible_facts['os_family'] != 'Darwin'
       apt:
-        update_cache: yes
-        
-    - name: Install Git
-      become: true
-      apt:
-        name: git
-        state: present
+        update_cache: true
+      loop:
+        - git
+        - openssh-client
+      loop_control:
+        label: "{{ item }}"
 
-    - name: Install OpenSSH client
-      become: true
-      apt:
-        name: openssh-client
+    - name: Install Git and OpenSSH client on Darwin (macOS)
+      when: ansible_facts['os_family'] == 'Darwin'
+      homebrew:
+        name: "{{ item }}"
         state: present
+      loop:
+        - git
+        - openssh
+      loop_control:
+        label: "{{ item }}"
 
     - name: Debug SSH key path
       debug:

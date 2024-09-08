@@ -1,0 +1,15 @@
+# README: This script will handle the instalation of Ansible on a CLEAN target machine.
+# it uses direct commands to achieve this and DOES not need python to be previously installed
+- name: Bootstrap Ansible
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+
+  # This script should bootstrap a catalyst dev installation on a new machine
+
+  # Bootstrap ansible (this is a raw playbook so that it can be run on a pre-provisioned system without ansible installed prior)
+  - run role ../boostrat_ansible/tasks/main.yaml
+
+
+  - run ../../tasks/provision_git.yaml

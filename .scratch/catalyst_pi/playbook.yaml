@@ -1,7 +1,0 @@
-- name: Provision Raspberry Pi Cluster
-  hosts: localhost
-  become: true
-  vars_files:
-    - vars/hostnames.yaml
-  roles:
-    - provision
