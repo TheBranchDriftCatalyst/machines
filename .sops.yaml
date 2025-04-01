@@ -1,0 +1,6 @@
+# This file is probably symlinked to ~/.sops.yaml
+# that is how we keep it consistent across machines
+# Otherwise we need to to sync to a keyserver and
+# alter the setup a bit
+creation_rules:
+- pgp: 0A35592660E1319CAB9F3D7381AAAA1B4C019612, C1DFB53D1605CC5EBAD1D0C51CB0317440C9A837, 54FD138AAFEBD2B7FD1FA946AF00F86B4A307DAB
