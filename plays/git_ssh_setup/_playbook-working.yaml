@@ -1,0 +1,112 @@
+- name: Setup Git with SSH and add key to GitHub
+  hosts: 192.168.1.30
+  gather_facts: yes
+  vars:
+    git_user_name: "TheBranchDriftCatalyst"
+    git_user_email: "djdanielsh@gmail.com"
+    ssh_key_comment: "djdanielsh@gmail.com"
+    ssh_key_path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+    ssh_key_type: rsa
+    ssh_key_bits: 4096
+    github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+    hostname: "{{ ansible_facts.hostname }}"
+  tasks:
+    - name: Update apt repository cache
+      become: true
+      apt:
+        update_cache: no
+
+    - name: Install Git
+      become: true
+      apt:
+        name: git
+        state: present
+
+    - name: Install OpenSSH client
+      become: true
+      apt:
+        name: openssh-client
+        state: present
+
+    - name: Install OpenSSH server
+      become: true
+      apt:
+        name: openssh-server
+        state: present
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: "{{ ansible_env.HOME }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_env.USER }}"
+        group: "{{ ansible_env.USER }}"
+
+    - name: Check if SSH private key already exists
+      stat:
+        path: "{{ ssh_key_path }}"
+      register: ssh_key
+
+    - name: Generate a new SSH key pair if not exists
+      command: ssh-keygen -t {{ ssh_key_type }} -b {{ ssh_key_bits }} -C "{{ git_user_name }}@{{ hostname }}" -f {{ ssh_key_path }} -N ""
+      args:
+        creates: "{{ ssh_key_path }}"
+
+    - name: Read the SSH public key
+      slurp:
+        src: "{{ ssh_key_path }}.pub"
+      register: ssh_pub_key_file
+
+    - name: Set decoded SSH public key fact
+      set_fact:
+        ssh_pub_key_decoded: "{{ ssh_pub_key_file.content | b64decode }}"
+
+    - name: Add public key to authorized_keys
+      authorized_key:
+        user: "{{ ansible_env.USER }}"
+        state: present
+        key: "{{ ssh_pub_key_decoded }}"
+
+    - name: Ensure global Git configuration file exists
+      file:
+        path: "{{ ansible_env.HOME }}/.gitconfig"
+        state: touch
+
+    - name: Set Git username
+      become: false
+      git_config:
+        name: user.name
+        value: "{{ git_user_name }}"
+        scope: global
+
+    - name: Set Git email
+      become: false
+      git_config:
+        name: user.email
+        value: "{{ git_user_email }}"
+        scope: global
+
+    - name: Add GitHub to known hosts
+      known_hosts:
+        path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
+        name: github.com
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+
+    - name: Try to add SSH key to GitHub
+      uri:
+        url: https://api.github.com/user/keys
+        method: POST
+        headers:
+          Accept: "application/vnd.github+json"
+          Authorization: "Bearer {{ github_token }}"
+          X-GitHub-Api-Version: "2022-11-28"
+        body: "{{ {'title': hostname, 'key': ssh_pub_key_decoded} | to_json }}"
+        status_code: 201
+        return_content: yes
+      register: github_key_response
+      failed_when: github_key_response.status not in [201, 422]
+      ignore_errors: yes
+
+    - name: Debug GitHub key upload result
+      debug:
+        msg: "GitHub response: {{ github_key_response.status }}"

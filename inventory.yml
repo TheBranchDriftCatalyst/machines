@@ -1,0 +1,29 @@
+all:
+  hosts:
+    truenas00:
+      ansible_host: 192.168.1.200
+      # ansible_user: ubuntu
+      # ansible_ssh_pass: "{{ hostvars['webserver01']['ssh_password'] }}"
+      # ansible_port: 22
+      # ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+      # ssh_password: secret_password_01
+      # env: production
+      # ansible_become: true
+      # ansible_become_method: sudo
+
+    drogon:
+      ansible_host: 192.168.1.30
+
+    viserion:
+      ansible_host: 192.168.1.192
+
+  children:
+    homelab:
+      hosts:
+        truenas:
+        viserion:
+        drogon:
+
+          # Example env vars
+          # vars:
+          #   some_api_key: "{{ lookup('env', 'MY_API_KEY') }}"

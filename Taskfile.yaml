@@ -1,18 +1,61 @@
-version: 3
+version: '3'
 
-# vars:
+dotenv: [ '.env' ]
 
 tasks:
-
   default:
-    desc: Run the build and deploy tasks
+    desc: Display available tasks
     cmds:
-    - echo "List of tasks:"
-    - echo "  - run"
+    - echo "Available tasks:"
+    - echo "  - deps"
+    - echo "  - deploy_ssh_key"
+    - echo "  - pre-provision"
+    - echo "  - play"
 
-  deploy_ssh_key:
-    desc: Run ansible playbook to deploy local ssh id_rsa to remotes authorized_keys
+  play:
+    desc: |
+      Run an Ansible playbook for a specific role.
+      Usage: task play -- <role_name>
+      Example: task play -- hostname_localdomain
+    silent: true
     cmds:
-    - ansible-playbook -i inventory.yaml ./tasks/webservers/deploy_ssh_key.ansible.yaml -l homelab -k
-  # Please create three commands here.
-  # fix-link, create-link
+    - |
+      if [ -z "{{.CLI_ARGS}}" ]; then
+        echo "Error: You must specify a role name. Usage: task play -- <role_name>"
+        exit 1
+      fi
+    - |
+      if [ -z "$ANSIBLE_PASSWORD" ] || [ -z "$ANSIBLE_BECOME_PASSWORD" ]; then
+        echo "Error: ANSIBLE_PASSWORD and ANSIBLE_BECOME_PASSWORD environment variables must be set."
+        exit 1
+      fi
+    - |
+      echo "Running Ansible playbook for role '{{.CLI_ARGS}}'..."
+      ansible-playbook \
+        -i ./inventory.yml \
+        ./plays/{{.CLI_ARGS}}/playbook.yml \
+        --extra-vars "ansible_password=$ANSIBLE_PASSWORD ansible_become_password=$ANSIBLE_BECOME_PASSWORD"
+
+  deps:
+    desc: Install project dependencies
+    cmds:
+    - echo "Installing Python dependencies with Poetry..."
+    - poetry install
+    - echo "Installing Ansible Galaxy roles..."
+    - ansible-galaxy install -r requirements.yml
+  # These are deprecated but kept for posterity
+  # deploy_ssh_key:
+  #   desc: Deploy local SSH public key to remote authorized_keys
+  #   preconditions:
+  #     - sh: '[ -f ~/.ssh/id_rsa.pub ]'
+  #       msg: "Error: SSH public key (~/.ssh/id_rsa.pub) not found."
+  #   cmds:
+  #     - echo "Deploying SSH public key to remote hosts..."
+  #     - ansible-playbook -i inventory.yml ./tasks/webservers/deploy_ssh_key.ansible.yml -l homelab -k
+
+  # pre-provision:
+  #   desc: Install OpenSSH server on the local machine
+  #   cmds:
+  #   - echo "Installing OpenSSH server..."
+  #   - sudo apt-get update
+  #   - sudo apt-get install -y openssh-server

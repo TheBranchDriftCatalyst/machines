@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  tasks:
+    - name: Include the main playbook
+      include_tasks: ./mount_homelab_nfs_pb.yml
