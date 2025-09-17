@@ -1,20 +1,26 @@
 {
     "ansible.python.interpreterPath": "/opt/homebrew/bin/python3",
-<<<<<<< HEAD
     "yaml.schemas": {
         "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/galaxy.json": "file:///Users/panda/catalyst-devspace/repos/common/machines/collections/catalyst_pi/galaxy.yaml",
-        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/tasks": "file:///Users/panda/catalyst-devspace/repos/common/machines/collections/image_dev/create_sdcard_image_zstd.yaml"
+        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/tasks": "file:///Users/panda/catalyst-devspace/repos/common/machines/collections/image_dev/create_sdcard_image_zstd.yaml",
+        "https://www.artillery.io/schema.json": []
     },
     "cSpell.words": [
-        "localdomain"
-=======
-    "cSpell.words": [
         "autofs",
+        "docsible",
         "homelabs",
         "lineinfile",
         "localdomain",
         "megapool",
-        "viserion"
->>>>>>> dbed8e0 (rebuilding it all, syncing with protecht branches)
-    ]
+        "syno00"
+    ],
+    "go.goroot": "/Users/panda/.local/share/mise/installs/go/1.23.0",
+    "debug.javascript.defaultRuntimeExecutable": {
+        "pwa-node": "/Users/panda/.local/share/mise/shims/node"
+    },
+    "python.defaultInterpreterPath": "/Users/panda/.local/share/mise/installs/python/3.13.3/bin/python",
+    "go.alternateTools": {
+        "go": "/Users/panda/.local/share/mise/shims/go",
+        "dlv": "/Users/panda/.local/share/mise/shims/dlv"
+    }
 }

@@ -3,25 +3,70 @@ version: '3'
 dotenv: [ '.env' ]
 
 tasks:
+
   default:
     desc: Display available tasks
     cmds:
+    - echo "Catalyst Machines - Ansible Infrastructure"
     - echo "Available tasks:"
-    - echo "  - deps"
-    - echo "  - deploy_ssh_key"
-    - echo "  - pre-provision"
-    - echo "  - play"
+    - echo "  - deps              Install all dependencies"
+    - echo "  - deps:python       Install Python dependencies"
+    - echo "  - deps:ansible      Install Ansible Galaxy dependencies"
+    - echo "  - deps:molecule     Install Molecule testing framework"
+    - echo "  - test              Run all molecule tests (Docker + Lima)"
+    - echo "  - test:default      Run molecule tests (Docker only)"
+    - echo "  - test:lima         Run molecule tests (macOS simulation)"
+    - echo "  - test:create       Create test instances (Docker)"
+    - echo "  - test:create:lima  Create test instances (macOS simulation)"
+    - echo "  - test:converge     Run test playbooks (Docker)"
+    - echo "  - test:converge:lima Run test playbooks (macOS simulation)"
+    - echo "  - test:verify       Verify test results (Docker)"
+    - echo "  - test:verify:lima  Verify test results (macOS simulation)"
+    - echo "  - test:destroy      Destroy test instances (Docker)"
+    - echo "  - test:destroy:lima Destroy test instances (macOS simulation)"
+    - echo "  - bootstrap         Run bootstrap playbook"
+    - echo "  - play              Run specific playbook"
+    - echo "  - docs              Generate comprehensive documentation"
+    - echo "  - docs:init         Initialize antsibull-docs structure"
+    - echo "  - docs:build        Build documentation with antsibull-docs"
+    - echo "  - docs:lint         Lint documentation"
+    - echo "  - clean             Clean up generated files"
+
+  # https://github.com/docsible/docsible?tab=readme-ov-file#installation
+  docsible:env:
+    generates:
+    - .docsible/bin/activate
+    cmds:
+    - python3 -m venv .docsible
+    - source .docsible/bin/activate
+
+  docsible:
+    deps: [ docsible:env ]
+    cmds:
+    - pip install docsible
+    - docsible --role ./roles/node_exporter --graph
+
+  clean:files:
+    desc: Clean up generated files
+    cmds:
+    - echo "Cleaning up generated files..."
+    - rm -rf .docsible
+    - rm -rf .venv
+    - rm -rf .pytest_cache
+    - rm -rf .mypy_cache
+    - rm -rf .coverage
+    - find . -name '__pycache__' -delete
 
   play:
     desc: |
-      Run an Ansible playbook for a specific role.
-      Usage: task play -- <role_name>
-      Example: task play -- hostname_localdomain
+      Run an Ansible playbook.
+      Usage: task play -- <playbook_name>
+      Example: task play -- direct-nas
     silent: true
     cmds:
     - |
       if [ -z "{{.CLI_ARGS}}" ]; then
-        echo "Error: You must specify a role name. Usage: task play -- <role_name>"
+        echo "Error: You must specify a playbook name. Usage: task play -- <playbook_name>"
         exit 1
       fi
     - |
@@ -30,19 +75,276 @@ tasks:
         exit 1
       fi
     - |
-      echo "Running Ansible playbook for role '{{.CLI_ARGS}}'..."
+      echo "Running Ansible playbook '{{.CLI_ARGS}}'..."
       ansible-playbook \
         -i ./inventory.yml \
-        ./plays/{{.CLI_ARGS}}/playbook.yml \
+        ./playbooks/{{.CLI_ARGS}}.yml \
         --extra-vars "ansible_password=$ANSIBLE_PASSWORD ansible_become_password=$ANSIBLE_BECOME_PASSWORD"
 
   deps:
-    desc: Install project dependencies
+    desc: Install all project dependencies
+    deps: [ deps:python, deps:ansible, deps:molecule ]
     cmds:
-    - echo "Installing Python dependencies with Poetry..."
-    - poetry install
-    - echo "Installing Ansible Galaxy roles..."
-    - ansible-galaxy install -r requirements.yml
+    - echo "✅ All dependencies installed successfully!"
+
+  deps:python:
+    desc: Install Python dependencies (Ansible, etc.)
+    cmds:
+    - echo "🐍 Installing Python dependencies..."
+    - |
+      if command -v poetry >/dev/null 2>&1; then
+        echo "Using Poetry for dependency management"
+        poetry install
+      else
+        echo "Using pip for dependency management"
+        pip3 install "ansible>=8.0.0" "ansible-lint>=6.0.0" "yamllint>=1.20.0" jinja2 pyyaml requests
+      fi
+
+  deps:ansible:
+    desc: Install Ansible Galaxy collections and roles
+    cmds:
+    - echo "📦 Installing Ansible Galaxy dependencies..."
+    - |
+      if [ -f requirements.yml ]; then
+        ansible-galaxy install -r requirements.yml
+        ansible-galaxy collection install -r requirements.yml
+      else
+        echo "No requirements.yml found, installing default collections..."
+        ansible-galaxy collection install community.general ansible.posix community.crypto
+      fi
+
+  deps:molecule:
+    desc: Install Molecule testing framework
+    cmds:
+    - echo "🧪 Installing Molecule testing framework..."
+    - pip3 install "molecule>=6.0.0" "molecule-plugins[docker]>=23.0.0" "pytest>=7.0.0" "pytest-ansible>=4.0.0"
+    - |
+      if command -v docker >/dev/null 2>&1; then
+        echo "✅ Docker found - container testing available"
+      else
+        echo "⚠️  Docker not found - install Docker for container testing"
+      fi
+    - |
+      if command -v limactl >/dev/null 2>&1; then
+        echo "✅ Lima found - VM testing available"
+        if brew list lima-additional-guestagents >/dev/null 2>&1; then
+          echo "✅ Lima additional guest agents found - x86_64 support available"
+        else
+          echo "📦 Installing Lima additional guest agents for x86_64 support..."
+          brew install lima-additional-guestagents
+        fi
+      else
+        echo "📦 Installing Lima for VM testing..."
+        brew install lima lima-additional-guestagents
+      fi
+
+  # Testing tasks
+  test:
+    desc: Run all molecule test scenarios (default + lima)
+    silent: true
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "🧪 Running all molecule test scenarios..."
+    - molecule test
+    - molecule test --scenario-name lima
+
+  test:default:
+    desc: Run default molecule test suite (Docker containers)
+    silent: true
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "🧪 Running molecule test suite (Docker)..."
+    - molecule test
+
+  test:lima:
+    desc: Run lima molecule test suite (macOS simulation)
+    silent: true
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "🧪 Running molecule test suite (macOS simulation)..."
+    - molecule test --scenario-name lima
+
+  test:create:
+    desc: Create molecule test instances (default scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "🏗️  Creating test instances (Docker)..."
+    - molecule create
+
+  test:create:lima:
+    desc: Create molecule test instances (lima scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "🏗️  Creating test instances (Lima VMs)..."
+    - molecule create --scenario-name lima
+
+  test:converge:
+    desc: Run molecule converge (test playbooks, default scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "⚡ Running test playbooks (Docker)..."
+    - molecule converge
+
+  test:converge:lima:
+    desc: Run molecule converge (test playbooks, lima scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "⚡ Running test playbooks (Lima VMs)..."
+    - molecule converge --scenario-name lima
+
+  test:verify:
+    desc: Verify molecule test results (default scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "✅ Verifying test results (Docker)..."
+    - molecule verify
+
+  test:verify:lima:
+    desc: Verify molecule test results (lima scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "✅ Verifying test results (Lima VMs)..."
+    - molecule verify --scenario-name lima
+
+  test:destroy:
+    desc: Destroy molecule test instances (default scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "🗑️  Destroying test instances (Docker)..."
+    - molecule destroy
+
+  test:destroy:lima:
+    desc: Destroy molecule test instances (lima scenario)
+    deps: [ deps:molecule ]
+    cmds:
+    - echo "🗑️  Destroying test instances (Lima VMs)..."
+    - molecule destroy --scenario-name lima
+
+  # Bootstrap tasks
+  bootstrap:
+    desc: Run bootstrap development environment playbook
+    deps: [ deps:ansible ]
+    cmds:
+    - echo "🚀 Running bootstrap playbook..."
+    - |
+      echo "Available bootstrap options:"
+      echo "  - task bootstrap:local    # Run on localhost"
+      echo "  - task bootstrap:test     # Run in test mode"
+    - ansible-playbook playbooks/bootstrap-devspace.yml -i inventory.yml
+
+  bootstrap:local:
+    desc: Run bootstrap on localhost
+    deps: [ deps:ansible ]
+    cmds:
+    - echo "🏠 Running bootstrap on localhost..."
+    - ansible-playbook playbooks/bootstrap-devspace.yml -i inventory.yml --limit localhost
+
+  bootstrap:test:
+    desc: Run bootstrap in test mode (safe for development)
+    deps: [ deps:ansible ]
+    cmds:
+    - echo "🧪 Running bootstrap in test mode..."
+    - ansible-playbook playbooks/bootstrap-devspace.yml -i inventory.yml --limit localhost --extra-vars "catalyst_test_mode=true"
+
+  # Clean up tasks
+  clean:
+    desc: Clean up all generated files and caches
+    deps: [ clean:files ]
+    cmds:
+    - echo "🧹 Cleaning molecule artifacts..."
+    - molecule destroy || true
+    - rm -rf molecule/default/.cache || true
+
+  # Documentation generation tasks using antsibull-docs framework
+  docs:
+    desc: Generate comprehensive documentation using antsibull-docs
+    deps: [ docs:init, docs:build ]
+    cmds:
+    - echo "📚 Documentation generated successfully! Open docs/build/html/index.html"
+
+  docs:init:
+    desc: Initialize antsibull-docs Sphinx docsite
+    cmds:
+    - echo "🏗️  Initializing antsibull-docs documentation structure..."
+    - mkdir -p docs
+    - |
+      cd docs
+      if [ ! -f "build.sh" ]; then
+        echo "Creating virtual collection structure for documentation..."
+        mkdir -p ansible_collections/catalyst/machines/{roles,plugins}
+        cp -r ../roles/* ansible_collections/catalyst/machines/roles/ 2>/dev/null || true
+        export ANSIBLE_COLLECTIONS_PATH="$(pwd)"
+        antsibull-docs sphinx-init --use-current --squash-hierarchy catalyst.machines --dest-dir . || echo "⚠️  antsibull-docs not found - install with: pip install antsibull-docs"
+      fi
+
+  docs:build:
+    desc: Build documentation with antsibull-docs
+    deps: [ docs:init ]
+    cmds:
+    - echo "🔨 Building documentation with antsibull-docs..."
+    - |
+      cd docs
+      if [ -f "build.sh" ]; then
+        bash build.sh
+      else
+        echo "❌ Documentation not initialized. Run 'task docs:init' first."
+      fi
+
+  docs:playbooks:
+    desc: Generate supplementary playbook documentation
+    cmds:
+    - echo "📋 Generating playbook documentation..."
+    - mkdir -p docs/source
+    - |
+      cat > docs/source/playbooks.rst << 'EOF'
+      Catalyst Machines - Playbook Documentation
+      ==========================================
+
+      Generated on: $(date)
+
+      Available Playbooks
+      -------------------
+
+      EOF
+      for playbook in playbooks/*.yml; do
+        playbook_name=$(basename "$playbook" .yml)
+        description=$(grep -E '^# @description:' "$playbook" | sed 's/# @description: //' || echo "Run $playbook_name playbook")
+        echo "* \`\`task play -- $playbook_name\`\` - $description" >> docs/source/playbooks.rst
+      done
+      cat >> docs/source/playbooks.rst << 'EOF'
+
+      Role Inventory
+      --------------
+
+      .. list-table::
+         :header-rows: 1
+
+         * - Role
+           - Purpose
+           - Status
+      EOF
+      for role in roles/*/; do
+        role_name=$(basename "$role")
+        purpose=$(grep -E '^# @description:' "$role/tasks/main.yml" 2>/dev/null | head -1 | sed 's/# @description: //' || echo 'Ansible role')
+        echo "   * - $role_name" >> docs/source/playbooks.rst
+        echo "     - $purpose" >> docs/source/playbooks.rst
+        echo "     - ✅ Active" >> docs/source/playbooks.rst
+      done
+    - echo "✅ Playbook documentation generated in docs/source/playbooks.rst"
+
+  docs:lint:
+    desc: Lint collection documentation
+    cmds:
+    - echo "🔍 Linting documentation with antsibull-docs..."
+    - cd docs && antsibull-docs lint-collection-docs --plugin-docs ansible_collections/catalyst/machines || echo "⚠️  Linting skipped - antsibull-docs not available"
+
+  docs:clean:
+    desc: Clean up generated documentation
+    cmds:
+    - echo "🗑️  Cleaning documentation..."
+    - rm -rf docs/
+    - echo "✅ Documentation directory cleaned"
+
   # These are deprecated but kept for posterity
   # deploy_ssh_key:
   #   desc: Deploy local SSH public key to remote authorized_keys
