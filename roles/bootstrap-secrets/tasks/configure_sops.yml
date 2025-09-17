@@ -1,0 +1,58 @@
+---
+# Configure global SOPS settings
+
+- name: Check if .sops.yaml exists in secrets repo
+  stat:
+    path: "{{ secrets_path }}/.sops.yaml"
+  register: sops_config
+
+- name: Fail if SOPS config missing
+  fail:
+    msg: "SOPS configuration file not found at {{ secrets_path }}/.sops.yaml"
+  when: not sops_config.stat.exists
+
+- name: Check if global SOPS config already exists
+  stat:
+    path: "{{ ansible_env.HOME }}/.sops.yaml"
+  register: global_sops_config
+
+- name: Backup existing global SOPS config
+  copy:
+    src: "{{ ansible_env.HOME }}/.sops.yaml"
+    dest: "{{ ansible_env.HOME }}/.sops.yaml.backup.{{ ansible_date_time.epoch }}"
+    remote_src: true
+  when: global_sops_config.stat.exists and not global_sops_config.stat.islnk
+
+- name: Create symlink to global SOPS configuration
+  file:
+    src: "{{ secrets_path }}/.sops.yaml"
+    dest: "{{ ansible_env.HOME }}/.sops.yaml"
+    state: link
+    force: true
+
+- name: Verify SOPS configuration symlink
+  stat:
+    path: "{{ ansible_env.HOME }}/.sops.yaml"
+  register: sops_symlink_check
+
+- name: Display SOPS configuration status
+  debug:
+    msg:
+      - "SOPS config symlink created: {{ sops_symlink_check.stat.islnk }}"
+      - "Source: {{ secrets_path }}/.sops.yaml"
+      - "Target: {{ ansible_env.HOME }}/.sops.yaml"
+
+- name: Read SOPS configuration
+  slurp:
+    src: "{{ secrets_path }}/.sops.yaml"
+  register: sops_config_content
+
+- name: Parse SOPS configuration
+  set_fact:
+    sops_config_data: "{{ sops_config_content.content | b64decode | from_yaml }}"
+
+- name: Display SOPS configuration info
+  debug:
+    msg:
+      - "SOPS creation rules found: {{ sops_config_data.creation_rules | length }}"
+      - "GPG keys in config: {{ sops_config_data.creation_rules[0].pgp.split(', ') | length if sops_config_data.creation_rules | length > 0 else 0 }}"

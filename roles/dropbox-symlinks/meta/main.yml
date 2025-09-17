@@ -1,0 +1,52 @@
+---
+# @description: Meta information for dropbox-symlinks role
+galaxy_info:
+  role_name: dropbox-symlinks
+  author: TheBranchDriftCatalyst
+  description: Create symlinks from home directory to Dropbox folders with backup functionality
+  company: Catalyst DevSpace
+  license: MIT
+  min_ansible_version: 2.14
+
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+
+  galaxy_tags:
+    - dropbox
+    - symlinks
+    - backup
+    - filesystem
+    - synchronization
+
+dependencies: []
+
+argument_specs:
+  main:
+    short_description: Setup Dropbox folder symlinks
+    description:
+      - Backs up existing directories safely
+      - Creates symlinks to Dropbox folders
+      - Excludes large .photoslibrary files from backup
+      - Creates Movies → Videos symlink mapping
+    options:
+      dropbox_path:
+        description: Path to Dropbox directory
+        type: str
+        required: false
+        default: "{{ lookup('pipe', 'realpath ~/Library/CloudStorage/Dropbox') }}"
+      folders:
+        description: List of folders to symlink
+        type: list
+        required: false
+        default: ['Downloads', 'Documents', 'Pictures', 'Videos']
+      backup_dir:
+        description: Directory for backing up existing folders
+        type: str
+        required: false
+        default: "{{ ansible_env.PWD }}/.backup"

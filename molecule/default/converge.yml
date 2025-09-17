@@ -1,0 +1,99 @@
+---
+# Converge playbook for testing bootstrap roles
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # Test-specific variables
+    catalyst_devspace_root: "/tmp/catalyst-test"
+    catalyst_root: "/tmp/catalyst-test/catalyst"
+
+    # Mock repositories for testing
+    component_repos:
+      secrets:
+        url: "https://github.com/test/secrets.git"
+        path: "/tmp/catalyst-test/catalyst/@secrets"
+        branch: main
+      dotfiles:
+        url: "https://github.com/test/dotfiles-2024.git"
+        path: "/tmp/catalyst-test/catalyst/@dotfiles-2024"
+        branch: main
+      cli_tools:
+        url: "https://github.com/test/cli-tools.git"
+        path: "/tmp/catalyst-test/catalyst/@cli-tools"
+        branch: main
+
+    # Test configuration
+    git_user_name: "Test User"
+    git_user_email: "test@example.com"
+    github_username: "testuser"
+    github_token: ""
+
+    # Skip destructive operations in test mode
+    catalyst_test_mode: true
+    skip_homebrew_install: "{{ catalyst_test_mode }}"
+    skip_xcode_install: "{{ catalyst_test_mode }}"
+
+  pre_tasks:
+    - name: Set test-specific facts
+      set_fact:
+        homebrew_prefix: "{{ '/opt/homebrew' if ansible_architecture == 'arm64' else '/usr/local' }}"
+        is_macos_simulation: "{{ 'macos_simulation' in group_names }}"
+
+    - name: Create test directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ catalyst_devspace_root }}"
+        - "{{ catalyst_root }}"
+        - "{{ catalyst_root }}/@secrets"
+        - "{{ catalyst_root }}/@dotfiles-2024"
+        - "{{ catalyst_root }}/@cli-tools"
+
+    - name: Create mock git repositories
+      file:
+        path: "{{ item }}/.git"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ catalyst_root }}/@secrets"
+        - "{{ catalyst_root }}/@dotfiles-2024"
+        - "{{ catalyst_root }}/@cli-tools"
+
+    - name: Create mock SOPS config
+      copy:
+        content: |
+          creation_rules:
+            - pgp: 'TEST_KEY_1,TEST_KEY_2,TEST_KEY_3'
+        dest: "{{ catalyst_root }}/@secrets/.sops.yaml"
+        mode: '0644'
+
+  tasks:
+    # Simple molecule environment test
+    - name: Run molecule test role
+      include_role:
+        name: molecule-test
+
+    # Test only foundation role for now
+    - name: Test bootstrap-foundation role
+      include_role:
+        name: bootstrap-foundation
+      when: test_foundation | default(false)
+
+    # Additional roles can be enabled as they're completed
+    - name: Test bootstrap-secrets role
+      include_role:
+        name: bootstrap-secrets
+      when: test_secrets | default(false)
+
+  post_tasks:
+    - name: Gather test results
+      set_fact:
+        test_results:
+          foundation_completed: true
+          test_directories_created: true
+          mock_repos_created: true

@@ -1,0 +1,73 @@
+---
+# Install SOPS binary
+
+- name: Detect SOPS architecture
+  set_fact:
+    sops_arch: "{{ 'arm64' if ansible_architecture == 'arm64' else 'amd64' }}"
+    sops_os: "{{ ansible_facts['os_family'] | lower }}"
+
+- name: Set SOPS version and binary name
+  set_fact:
+    sops_version: "v3.9.0"
+    sops_binary: "sops-{{ sops_version }}.{{ sops_os }}.{{ sops_arch }}"
+    sops_url: "https://github.com/getsops/sops/releases/download/{{ sops_version }}/sops-{{ sops_version }}.{{ sops_os }}.{{ sops_arch }}"
+
+- name: Display SOPS installation details
+  debug:
+    msg:
+      - "SOPS version: {{ sops_version }}"
+      - "Architecture: {{ sops_arch }}"
+      - "OS: {{ sops_os }}"
+      - "Binary: {{ sops_binary }}"
+      - "Download URL: {{ sops_url }}"
+
+- name: Check if SOPS is already installed
+  command: which sops
+  register: sops_check
+  failed_when: false
+  changed_when: false
+
+- name: Get current SOPS version (if installed)
+  command: sops --version
+  register: sops_current_version
+  failed_when: false
+  changed_when: false
+  when: sops_check.rc == 0
+
+- name: Display current SOPS version
+  debug:
+    msg: "Current SOPS version: {{ sops_current_version.stdout }}"
+  when: sops_check.rc == 0
+
+- name: Download SOPS binary
+  get_url:
+    url: "{{ sops_url }}"
+    dest: "/tmp/{{ sops_binary }}"
+    mode: '0755'
+    timeout: 30
+  register: sops_download
+  when: sops_check.rc != 0 or (sops_current_version is defined and sops_version not in sops_current_version.stdout)
+
+- name: Install SOPS binary
+  copy:
+    src: "/tmp/{{ sops_binary }}"
+    dest: "{{ homebrew_prefix | default('/usr/local') }}/bin/sops"
+    mode: '0755'
+    remote_src: true
+  become: false
+  when: sops_download is defined and sops_download.changed
+
+- name: Clean up temporary SOPS binary
+  file:
+    path: "/tmp/{{ sops_binary }}"
+    state: absent
+  when: sops_download is defined and sops_download.changed
+
+- name: Verify SOPS installation
+  command: sops --version
+  register: sops_verify
+  changed_when: false
+
+- name: Display SOPS installation result
+  debug:
+    msg: "SOPS successfully installed: {{ sops_verify.stdout }}"

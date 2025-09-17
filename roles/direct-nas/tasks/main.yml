@@ -1,0 +1,26 @@
+---
+# Tasks for setting up direct NAS connection (Ubuntu only)
+
+- name: Verify interface exists
+  fail:
+    msg: "Interface {{ direct_nas_interface }} not found on host."
+  when: direct_nas_interface not in ansible_facts.interfaces
+
+- name: Create Netplan config for direct NAS connection
+  ansible.builtin.copy:
+    dest: "{{ netplan_config_path }}"
+    content: |
+      network:
+        version: 2
+        ethernets:
+          {{ direct_nas_interface }}:
+            dhcp4: no
+            addresses:
+              - {{ direct_nas_ip }}
+    owner: root
+    group: root
+    mode: '0600'
+    force: true
+
+- name: Apply Netplan configuration
+  ansible.builtin.command: netplan apply

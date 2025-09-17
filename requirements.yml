@@ -1,0 +1,14 @@
+---
+# Ansible Galaxy requirements for Catalyst Machines
+# Keep versions aligned with Ansible version in pyproject.toml (11.5.0+)
+
+collections:
+  - name: community.general
+    version: ">=9.0.0,<10.0.0"  # Compatible with Ansible 11.x
+  - name: ansible.posix
+    version: ">=1.6.0,<2.0.0"   # Compatible with Ansible 11.x
+  - name: community.crypto
+    version: ">=2.22.0,<3.0.0"  # Compatible with Ansible 11.x
+
+# Development and testing dependencies
+roles: []

@@ -1,0 +1,71 @@
+---
+# Validate SOPS functionality
+# Test encryption/decryption to ensure everything works
+
+- name: "✅ Validating SOPS functionality"
+  debug:
+    msg: "Testing SOPS encryption and decryption capabilities"
+
+- name: Create test secret file
+  copy:
+    content: |
+      test_secret: "bootstrap_validation_{{ ansible_date_time.epoch }}"
+      machine_id: "{{ ansible_hostname }}"
+      timestamp: "{{ ansible_date_time.iso8601 }}"
+    dest: "/tmp/sops_test.yaml"
+    mode: '0600'
+
+- name: Test SOPS encryption
+  command: sops -e /tmp/sops_test.yaml
+  register: sops_encrypt_test
+  changed_when: false
+
+- name: Verify encryption worked
+  assert:
+    that:
+      - sops_encrypt_test.rc == 0
+      - "'sops' in sops_encrypt_test.stdout"
+      - "'version' in sops_encrypt_test.stdout"
+    fail_msg: "SOPS encryption test failed"
+    success_msg: "SOPS encryption working correctly"
+
+- name: Test SOPS decryption on existing manifest
+  command: sops -d "{{ secrets_path }}/manifest.sops.yaml"
+  register: sops_decrypt_test
+  changed_when: false
+  failed_when: false  # This might fail if manifest is not encrypted
+
+- name: Display SOPS validation results
+  debug:
+    msg:
+      - "SOPS encryption: ✅ Working"
+      - "SOPS decryption: {{ '✅ Working' if sops_decrypt_test.rc == 0 else '⚠️  Manifest not encrypted or accessible' }}"
+      - "Global config: ~/.sops.yaml → {{ secrets_path }}/.sops.yaml"
+      - "Team keyring: {{ secrets_path }}/keyring/"
+
+- name: Clean up test file
+  file:
+    path: "/tmp/sops_test.yaml"
+    state: absent
+
+- name: Test secrets loader script
+  stat:
+    path: "{{ secrets_path }}/bin/secrets_loader.sh"
+  register: secrets_loader_script
+
+- name: Display secrets loader status
+  debug:
+    msg: "Secrets loader script: {{ '✅ Available' if secrets_loader_script.stat.exists else '⚠️  Not found' }}"
+
+- name: Final SOPS setup summary
+  debug:
+    msg:
+      - "🔐 SOPS Infrastructure Setup Complete"
+      - "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - "✅ SOPS binary installed and working"
+      - "✅ GPG keyring configured with team keys"
+      - "✅ Global ~/.sops.yaml configuration linked"
+      - "✅ Machine-specific key generated and added"
+      - "✅ Team collaboration enabled"
+      - ""
+      - "Next: Secrets can now be encrypted/decrypted across all team machines"

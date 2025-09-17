@@ -1,0 +1,20 @@
+---
+# @description: Setup Git with SSH and GitHub integration using bootstrap-foundation
+# @var github_token: GitHub personal access token (from GITHUB_TOKEN env var)
+# @note: This playbook now uses the enhanced bootstrap-foundation role
+
+- name: Setup Git with SSH and GitHub integration
+  hosts: all
+  gather_facts: true
+
+  vars:
+    github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+
+  pre_tasks:
+    - name: Verify GitHub token is available
+      ansible.builtin.fail:
+        msg: "GITHUB_TOKEN environment variable must be set for GitHub SSH key integration"
+      when: github_token == ""
+
+  roles:
+    - bootstrap-foundation

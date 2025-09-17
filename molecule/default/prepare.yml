@@ -1,0 +1,33 @@
+---
+# Prepare step for molecule testing
+- name: Prepare test environment
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Update package cache (Debian/Ubuntu)
+      apt:
+        update_cache: true
+        cache_valid_time: 600
+      when: ansible_os_family == "Debian"
+
+    - name: Install basic packages (Debian/Ubuntu)
+      apt:
+        name:
+          - curl
+          - git
+          - python3
+          - python3-pip
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install basic packages (macOS simulation)
+      debug:
+        msg: "Simulating macOS package installation"
+      when: simulate_macos | default(false)
+
+    - name: Set test environment facts
+      set_fact:
+        molecule_test_prepared: true
+        test_timestamp: "{{ ansible_date_time.iso8601 }}"

@@ -1,0 +1,76 @@
+---
+# @description: Deploy Semaphore UI for web-based Ansible management using Docker
+# @var semaphore_dir: Directory for docker-compose files (default: ./semaphore)
+# @note: Creates PostgreSQL database and Semaphore web interface on port 3030
+# @requires: Docker and docker-compose for container deployment
+# @usage: Access via http://localhost:3030 (panda/panda)
+
+- name: Deploy Semaphore UI for Ansible management
+  hosts: localhost
+  gather_facts: false
+  become: false
+
+  vars:
+    semaphore_dir: "{{ ansible_env.PWD }}/semaphore"
+    semaphore_compose_content: |
+      services:
+        postgres:
+          restart: unless-stopped
+          image: postgres:14
+          hostname: postgres
+          volumes:
+           - semaphore-postgres:/var/lib/postgresql/data
+          environment:
+           POSTGRES_USER: semaphore
+           POSTGRES_PASSWORD: semaphore
+           POSTGRES_DB: semaphore
+
+        semaphore:
+          restart: unless-stopped
+          ports:
+            - 3030:3000
+          image: semaphoreui/semaphore:latest
+          environment:
+            SEMAPHORE_DB_USER: semaphore
+            SEMAPHORE_DB_PASS: semaphore
+            SEMAPHORE_DB_HOST: postgres
+            SEMAPHORE_DB_PORT: 5432
+            SEMAPHORE_DB_DIALECT: postgres
+            SEMAPHORE_DB: semaphore
+            SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+            SEMAPHORE_ADMIN_PASSWORD: panda
+            SEMAPHORE_ADMIN_NAME: panda
+            SEMAPHORE_ADMIN_EMAIL: panda@localhost
+            SEMAPHORE_ADMIN: panda
+            SEMAPHORE_ACCESS_KEY_ENCRYPTION: gs72mPntFATGJs9qK0pQ0rKtfidlexiMjYCH9gWKhTU=
+            TZ: America/Denver
+          depends_on:
+            - postgres
+
+      volumes:
+        semaphore-postgres:
+
+  tasks:
+    - name: Create Semaphore directory
+      ansible.builtin.file:
+        path: "{{ semaphore_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create docker-compose.yml for Semaphore UI
+      ansible.builtin.copy:
+        content: "{{ semaphore_compose_content }}"
+        dest: "{{ semaphore_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Display Semaphore UI information
+      ansible.builtin.debug:
+        msg:
+          - "Semaphore UI Docker Compose file created at: {{ semaphore_dir }}/docker-compose.yml"
+          - "To start Semaphore UI:"
+          - "  cd {{ semaphore_dir }}"
+          - "  docker-compose up -d"
+          - ""
+          - "Access Semaphore UI at: http://localhost:3030"
+          - "Username: panda"
+          - "Password: panda"

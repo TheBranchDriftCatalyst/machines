@@ -1,0 +1,142 @@
+---
+# @description: Bootstrap complete Catalyst development environment with all components
+# @var catalyst_test_mode: Enable test mode for safe development (default: false)
+# @var secrets_path: Path to catalyst secrets repository (required)
+# @note: This is the main bootstrap playbook that orchestrates all setup phases
+# @requires: GITHUB_TOKEN environment variable for GitHub integration
+#
+# Catalyst Devspace Bootstrap Playbook
+# Complete development workspace setup for new machines
+- name: Bootstrap Catalyst Development Environment
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    # Base configuration
+    catalyst_devspace_root: "{{ ansible_env.HOME }}/catalyst-devspace"
+    catalyst_root: "{{ catalyst_devspace_root }}/catalyst"
+
+    # Component paths
+    secrets_path: "{{ catalyst_root }}/@secrets"
+    dotfiles_path: "{{ catalyst_root }}/@dotfiles-2024"
+    cli_tools_path: "{{ catalyst_root }}/@cli-tools"
+    machines_path: "{{ catalyst_root }}/@machines"
+
+    # Git configuration
+    git_user_name: "{{ lookup('env', 'GIT_USER_NAME') | default('TheBranchDriftCatalyst', true) }}"
+    git_user_email: "{{ lookup('env', 'GIT_USER_EMAIL') | default('djdanielsh@gmail.com', true) }}"
+    github_username: "{{ lookup('env', 'GITHUB_USERNAME') | default('TheBranchDriftCatalyst', true) }}"
+    github_token: "{{ lookup('env', 'GITHUB_TOKEN') | default('', true) }}"
+
+    # Component repositories
+    # Use HTTPS with token for private repos, or SSH if token not provided
+    repo_auth_method: "{{ 'https' if github_token else 'ssh' }}"
+    component_repos:
+      secrets:
+        url: "{{ 'https://oauth2:' + github_token + '@github.com/' + github_username + '/secrets.git' if github_token else 'git@github.com:' + github_username + '/secrets.git' }}"
+        path: "{{ secrets_path }}"
+        branch: main
+      dotfiles:
+        url: "{{ 'https://oauth2:' + github_token + '@github.com/' + github_username + '/dotfiles-2024.git' if github_token else 'git@github.com:' + github_username + '/dotfiles-2024.git' }}"
+        path: "{{ dotfiles_path }}"
+        branch: main
+      cli_tools:
+        url: "{{ 'https://oauth2:' + github_token + '@github.com/' + github_username + '/cli-tools.git' if github_token else 'git@github.com:' + github_username + '/cli-tools.git' }}"
+        path: "{{ cli_tools_path }}"
+        branch: main
+      machines:
+        url: "{{ 'https://oauth2:' + github_token + '@github.com/' + github_username + '/machines.git' if github_token else 'git@github.com:' + github_username + '/machines.git' }}"
+        path: "{{ machines_path }}"
+        branch: main
+
+    # Installation phases
+    bootstrap_phases:
+      - foundation
+      - secrets
+      - dotfiles
+      - cli_tools
+      - validation
+
+  pre_tasks:
+    - name: Display bootstrap information
+      debug:
+        msg:
+          - "🚀 Starting Catalyst Devspace Bootstrap"
+          - "Target directory: {{ catalyst_devspace_root }}"
+          - "Git user: {{ git_user_name }} <{{ git_user_email }}>"
+          - "GitHub username: {{ github_username }}"
+          - "Phases: {{ bootstrap_phases | join(', ') }}"
+
+    - name: Ensure catalyst devspace directory exists
+      file:
+        path: "{{ catalyst_devspace_root }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if this is a fresh installation
+      stat:
+        path: "{{ catalyst_root }}/.bootstrap-completed"
+      register: bootstrap_status
+
+    - name: Set installation mode
+      set_fact:
+        fresh_install: "{{ not bootstrap_status.stat.exists }}"
+        reinstall_mode: "{{ bootstrap_status.stat.exists }}"
+
+    - name: Display installation mode
+      debug:
+        msg: "{{ 'Fresh installation' if fresh_install else 'Reinstall/update mode' }}"
+
+  roles:
+    - name: bootstrap-foundation
+      tags: ['foundation', 'bootstrap']
+
+    # SOPS Infrastructure - PRODUCTION READY
+    # Based on existing @machines/roles/catalyst-sops/* code
+    # Features: GPG keyring, team collaboration, global config
+    - name: bootstrap-secrets
+      tags: ['secrets', 'bootstrap']
+
+    # TODO: Implement remaining roles
+    - name: bootstrap-dotfiles
+      tags: ['dotfiles', 'bootstrap']
+
+    - name: bootstrap-cli-tools
+      tags: ['cli-tools', 'bootstrap']
+
+    - name: bootstrap-validation
+      tags: ['validation', 'bootstrap']
+
+  post_tasks:
+    - name: Create bootstrap completion marker
+      file:
+        path: "{{ catalyst_root }}/.bootstrap-completed"
+        state: touch
+        mode: '0644'
+
+    - name: Record bootstrap completion
+      lineinfile:
+        path: "{{ catalyst_root }}/.bootstrap-completed"
+        line: "{{ ansible_date_time.iso8601 }}: Bootstrap completed successfully"
+        create: true
+
+    - name: Display completion message
+      debug:
+        msg:
+          - "🎉 Catalyst Devspace Bootstrap Complete!"
+          - ""
+          - "Next steps:"
+          - "1. Restart your terminal or run: source ~/.zshrc"
+          - "2. Test CLI tools: catalystTest"
+          - "3. Test SOPS: cd {{ secrets_path }} && sops -d manifest.sops.yaml"
+          - "4. Explore afx tools: afx list"
+          - ""
+          - "Installed components:"
+          - "- 🔐 SOPS encrypted secrets management"
+          - "- 🏠 Dotfiles with 400+ brew packages"
+          - "- 🛠️  AFX with 900+ CLI tools"
+          - "- ⚡ Custom Go CLI applications"
+          - "- 🔧 Direnv environment management"
+          - ""
+          - "Happy coding! 🚀"

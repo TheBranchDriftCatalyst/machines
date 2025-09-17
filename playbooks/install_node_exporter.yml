@@ -1,0 +1,22 @@
+---
+# @description: Install and configure Prometheus Node Exporter for system monitoring
+# @note: Installs Node Exporter on specified hosts and provides Prometheus configuration
+# @requires: Sudo access for service installation and management
+# @usage: ansible-playbook playbooks/install_node_exporter.yml -i ./inventory.yml
+
+- name: Install and start Node Exporter
+  hosts:
+    - drogon
+    - localhost
+  become: true
+  roles:
+    - node_exporter
+  tasks:
+    - name: Show Prometheus scrape config for Node Exporter
+      ansible.builtin.debug:
+        msg: |
+          Add the following to your Prometheus config:
+
+            - job_name: 'node-exporter'
+              static_configs:
+                - targets: ['{{ ansible_host | default(inventory_hostname) }}:9100']

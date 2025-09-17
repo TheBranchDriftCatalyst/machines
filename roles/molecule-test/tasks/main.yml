@@ -1,0 +1,127 @@
+---
+# Simple Molecule Test Role
+# Tests basic molecule functionality with OS/environment detection
+
+- name: "🧪 Testing Molecule Setup"
+  debug:
+    msg: "Running basic molecule environment tests"
+
+- name: Gather system facts
+  setup:
+    gather_subset:
+      - "!hardware"
+      - "distribution"
+      - "network"
+
+- name: Display environment information
+  debug:
+    msg:
+      - "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - "🔍 MOLECULE TEST ENVIRONMENT"
+      - "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - "Hostname: {{ ansible_hostname }}"
+      - "OS Family: {{ ansible_os_family }}"
+      - "Distribution: {{ ansible_distribution | default('Unknown') }}"
+      - "Architecture: {{ ansible_architecture }}"
+      - "Python Version: {{ ansible_python_version }}"
+      - "Platform: {{ ansible_system }}"
+      - "User: {{ ansible_env.USER | default(ansible_user_id) }}"
+      - "Home: {{ ansible_env.HOME | default('Not set') }}"
+
+- name: Test environment variables
+  debug:
+    msg:
+      - "Environment Variables:"
+      - "PATH: {{ ansible_env.PATH | default('Not set') }}"
+      - "Test Mode: {{ catalyst_test_mode | default(false) }}"
+      - "Homebrew Prefix: {{ homebrew_prefix | default('Not set') }}"
+
+- name: Check if running in Docker
+  stat:
+    path: /.dockerenv
+  register: docker_check
+
+- name: Check if running in Lima VM
+  stat:
+    path: /etc/lima-version
+  register: lima_check
+  failed_when: false
+
+- name: Display container information
+  debug:
+    msg:
+      - "Container Detection:"
+      - "Docker: {{ '✅ Yes' if docker_check.stat.exists else '❌ No' }}"
+      - "Lima VM: {{ '✅ Yes' if lima_check.stat.exists else '❌ No' }}"
+      - "Virtualized: {{ ansible_virtualization_type | default('Unknown') }}"
+
+- name: Test basic assertions
+  assert:
+    that:
+      - ansible_hostname is defined
+      - ansible_os_family is defined
+      - ansible_architecture in ['x86_64', 'arm64', 'aarch64']
+      - ansible_python_version is defined
+    success_msg: "✅ Basic system assertions passed"
+    fail_msg: "❌ Basic system assertions failed"
+
+- name: Test OS-specific conditions
+  debug:
+    msg: "{{ 'macOS simulation detected' if simulate_macos | default(false) else 'Standard ' + ansible_os_family + ' environment' }}"
+
+- name: Simulate macOS environment checks (if applicable)
+  block:
+    - name: Check simulated homebrew prefix
+      debug:
+        msg: "Simulated Homebrew prefix: {{ homebrew_prefix }}"
+
+    - name: Test architecture-specific logic
+      debug:
+        msg: "Architecture-specific test: {{ 'Apple Silicon simulation' if ansible_architecture == 'arm64' else 'Intel simulation' }}"
+  when: simulate_macos | default(false)
+
+- name: Test file system operations
+  block:
+    - name: Create test directory
+      file:
+        path: /tmp/molecule-test
+        state: directory
+        mode: '0755'
+
+    - name: Check if test file exists
+      stat:
+        path: /tmp/molecule-test/test-data.yml
+      register: existing_test_file
+
+    - name: Create test file
+      copy:
+        content: |
+          molecule_test: true
+          timestamp: "{{ ansible_date_time.iso8601 }}"
+          hostname: "{{ ansible_hostname }}"
+        dest: /tmp/molecule-test/test-data.yml
+        mode: '0644'
+      when: not existing_test_file.stat.exists
+
+    - name: Verify test file creation
+      stat:
+        path: /tmp/molecule-test/test-data.yml
+      register: test_file
+
+    - name: Assert test file exists
+      assert:
+        that:
+          - test_file.stat.exists
+          - test_file.stat.size > 0
+        success_msg: "✅ File system operations working"
+        fail_msg: "❌ File system operations failed"
+
+- name: Final test summary
+  debug:
+    msg:
+      - "🎉 MOLECULE TEST COMPLETED"
+      - "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - "Platform: {{ ansible_system }} {{ ansible_architecture }}"
+      - "Environment: {{ 'Docker Container' if docker_check.stat.exists else 'Native/VM' }}"
+      - "Test Status: All assertions passed ✅"
+      - "Ready for bootstrap testing!"

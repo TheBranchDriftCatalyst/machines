@@ -1,0 +1,46 @@
+---
+# Verify step for molecule testing
+- name: Verify test results
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Verify molecule test role ran successfully
+      stat:
+        path: /tmp/molecule-test/test-data.yml
+      register: test_verification
+
+    - name: Assert test completion
+      assert:
+        that:
+          - test_verification.stat.exists
+        success_msg: "✅ Molecule test verification passed"
+        fail_msg: "❌ Molecule test verification failed"
+
+    - name: Read test data
+      slurp:
+        src: /tmp/molecule-test/test-data.yml
+      register: test_data_content
+
+    - name: Parse test data
+      set_fact:
+        test_data: "{{ test_data_content.content | b64decode | from_yaml }}"
+
+    - name: Verify test data content
+      assert:
+        that:
+          - test_data.molecule_test is defined
+          - test_data.molecule_test == true
+          - test_data.hostname is defined
+          - test_data.timestamp is defined
+        success_msg: "✅ Test data validation passed"
+        fail_msg: "❌ Test data validation failed"
+
+    - name: Display verification summary
+      debug:
+        msg:
+          - "🔍 MOLECULE VERIFICATION COMPLETE"
+          - "Test file exists: ✅"
+          - "Test data valid: ✅"
+          - "Hostname: {{ test_data.hostname }}"
+          - "Timestamp: {{ test_data.timestamp }}"

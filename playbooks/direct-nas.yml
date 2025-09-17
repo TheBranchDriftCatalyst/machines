@@ -1,0 +1,19 @@
+---
+# @description: Setup direct connection to NAS using Netplan configuration (Ubuntu only)
+# @var direct_nas_interface: Network interface to use (prompted interactively)
+# @var direct_nas_ip: IP address for direct connection (default: 10.10.10.2/24)
+# @note: Creates Netplan configuration and applies network settings automatically
+# @requires: Ubuntu with Netplan support
+
+- name: Setup Direct Connection to NAS (Ubuntu Only)
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars_prompt:
+    - name: direct_nas_interface
+      prompt: "Enter interface to use (e.g., enp2s0)"
+      private: false
+
+  roles:
+    - direct-nas

@@ -1,0 +1,14 @@
+---
+# @description: Create symlinks from home directory to Dropbox folders with backup
+# @var dropbox_path: Path to Dropbox directory (auto-detected)
+# @var folders: List of folders to symlink (default: Downloads, Documents, Pictures, Videos)
+# @note: Backs up existing directories before creating symlinks, excludes .photoslibrary files
+# @requires: Dropbox installed and synced
+
+- name: Set up Dropbox symlinks
+  hosts: all
+  gather_facts: true
+  become: false
+
+  roles:
+    - dropbox-symlinks

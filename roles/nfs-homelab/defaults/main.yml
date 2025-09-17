@@ -1,0 +1,33 @@
+---
+# Default variables for NFS homelab role
+autofs_base: "/nfs"
+nfs_exports:
+  truenas00:
+    # http://192.168.1.200:81/ui/sharing/nfs
+    - export: "/mnt/megapool/px200"
+      map_name: "megapool_px200"
+    - export: "/mnt/iocage/appdata"
+      map_name: "iocage_appdata"
+    - export: "/mnt/megapool/666"
+      map_name: "megapool_666"
+    - export: "/mnt/megapool/books"
+      map_name: "megapool_books"
+    - export: "/mnt/megapool/drogon-services"
+      map_name: "megapool_drogon-services"
+    - export: "/mnt/megapool/media"
+      map_name: "megapool_media"
+    - export: "/mnt/megapool/media/tv"
+      map_name: "megapool_media_tv"
+    - export: "/mnt/megapool/downloads"
+      map_name: "megapool_downloads"
+  syno00:
+    - export: "/volume1/backups"
+      map_name: "syno00_backups"
+    - export: "/volume1/drogon_server"
+      map_name: "syno00_drogon_server"
+    - export: "/volume1/media"
+      map_name: "syno00_media"
+    - export: "/volume1/downloads"
+      map_name: "syno00_downloads"
+    - export: "/volume1/p00x"
+      map_name: "syno00_p00x"

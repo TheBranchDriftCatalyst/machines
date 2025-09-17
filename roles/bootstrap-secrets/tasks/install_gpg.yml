@@ -1,0 +1,47 @@
+---
+# Install GPG based on OS
+# Based on: @machines/roles/catalyst-sops/_install_sops.yaml
+
+- name: Install GPG dependencies on Linux
+  package:
+    name:
+      - gnupg
+      - curl
+      - coreutils
+    state: present
+  become: true
+  when: ansible_os_family in ["Debian", "RedHat"]
+
+- name: Install GPG on macOS
+  homebrew:
+    name:
+      - gnupg
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Verify GPG installation
+  command: gpg --version
+  register: gpg_version_check
+  changed_when: false
+
+- name: Display GPG version
+  debug:
+    msg: "GPG version: {{ gpg_version_check.stdout_lines[0] }}"
+
+- name: Ensure GPG directory exists with correct permissions
+  file:
+    path: "{{ ansible_env.HOME }}/.gnupg"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_env.USER }}"
+
+- name: Configure GPG to work in non-interactive mode
+  copy:
+    dest: "{{ ansible_env.HOME }}/.gnupg/gpg.conf"
+    content: |
+      # GPG configuration for SOPS
+      use-agent
+      pinentry-mode loopback
+      trust-model always
+    mode: '0600'
+    backup: true

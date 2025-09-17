@@ -1,0 +1,60 @@
+---
+# Setup GPG environment for SOPS
+# Based on: @machines/roles/catalyst-sops/_provision_sops.yaml
+# and: @machines/roles/devsauce/tasks/provision_SOPS.yaml
+
+- name: "🔑 Setting up GPG environment"
+  debug:
+    msg: "Configuring GPG for SOPS encryption"
+
+- name: Install GnuPG dependencies
+  include_tasks: install_gpg.yml
+
+- name: Set GPG key variables
+  set_fact:
+    key_name: "{{ ansible_facts['hostname'] }}@knowledgedump.space"
+    key_comment: "SOPS ansible host"
+    key_server: "pgp.mit.edu"
+
+- name: Check if GPG key already exists
+  command: gpg --list-secret-keys "{{ key_name }}"
+  register: existing_gpg_key
+  failed_when: false
+  changed_when: false
+
+- name: Generate GPG key (if not exists)
+  shell: |
+    gpg --batch --full-generate-key <<EOF
+    %no-protection
+    Key-Type: 1
+    Key-Length: 4096
+    Subkey-Type: 1
+    Subkey-Length: 4096
+    Expire-Date: 0
+    Name-Comment: {{ key_comment }}
+    Name-Real: {{ key_name }}
+    EOF
+  register: gpg_key_gen
+  when: existing_gpg_key.rc != 0
+  changed_when: existing_gpg_key.rc != 0
+
+- name: Get GPG key fingerprint
+  command: gpg --list-secret-keys --with-colons "{{ key_name }}"
+  register: gpg_fingerprint_output
+  changed_when: false
+
+- name: Extract GPG key fingerprint
+  set_fact:
+    gpg_fingerprint: "{{ gpg_fingerprint_output.stdout | regex_search('fpr:::::::::([A-F0-9]{40}):', '\\1') }}"
+
+- name: Display GPG key information
+  debug:
+    msg:
+      - "GPG key name: {{ key_name }}"
+      - "GPG key fingerprint: {{ gpg_fingerprint[0] if gpg_fingerprint else 'Not found' }}"
+      - "Key generation: {{ 'New key created' if gpg_key_gen is defined and gpg_key_gen.changed else 'Using existing key' }}"
+
+- name: Fail if GPG key fingerprint not found
+  fail:
+    msg: "Could not extract GPG key fingerprint for {{ key_name }}"
+  when: not gpg_fingerprint or gpg_fingerprint | length == 0

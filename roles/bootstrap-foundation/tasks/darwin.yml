@@ -1,0 +1,112 @@
+---
+# macOS-specific foundation setup
+
+- name: Detect processor architecture
+  set_fact:
+    is_apple_silicon: "{{ ansible_architecture == 'arm64' }}"
+    is_intel: "{{ ansible_architecture == 'x86_64' }}"
+    homebrew_prefix: "{{ '/opt/homebrew' if ansible_architecture == 'arm64' else '/usr/local' }}"
+
+- name: Display architecture information
+  debug:
+    msg:
+      - "Detected architecture: {{ ansible_architecture }}"
+      - "Apple Silicon: {{ is_apple_silicon }}"
+      - "Intel: {{ is_intel }}"
+      - "Homebrew prefix: {{ homebrew_prefix }}"
+
+- name: Check if XCode CLI tools are installed
+  stat:
+    path: /usr/bin/xcrun
+  register: xcode_cli
+
+- name: Install XCode CLI tools (if missing)
+  shell: xcode-select --install
+  register: xcode_install_result
+  failed_when: false
+  changed_when: xcode_install_result.rc == 0
+  when: not xcode_cli.stat.exists
+
+- name: Wait for XCode CLI tools installation (if needed)
+  wait_for:
+    path: /usr/bin/xcrun
+    timeout: 300
+  when: xcode_install_result is defined and xcode_install_result.changed
+
+- name: Check if Homebrew is installed
+  stat:
+    path: "{{ homebrew_prefix }}/bin/brew"
+  register: homebrew_check
+
+- name: Install Homebrew
+  shell: |
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  become: false
+  register: homebrew_install
+  when: not homebrew_check.stat.exists
+
+- name: Add Homebrew to shell profile
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zprofile"
+    line: 'eval "$({{ homebrew_prefix }}/bin/brew shellenv)"'
+    create: true
+    state: present
+  when: homebrew_check.stat.exists or (homebrew_install is defined and homebrew_install.changed)
+
+- name: Source Homebrew environment for current session
+  shell: 'eval "$({{ homebrew_prefix }}/bin/brew shellenv)" && echo "HOMEBREW_PREFIX=$HOMEBREW_PREFIX"'
+  register: brew_env
+  changed_when: false
+
+- name: Install essential development tools via Homebrew
+  homebrew:
+    name:
+      - git
+      - go-task
+      - python@3.12
+      - fzf
+      - direnv
+      - gnupg  # Required for SOPS
+    state: present
+    update_homebrew: true
+  environment:
+    PATH: "{{ homebrew_prefix }}/bin:{{ ansible_env.PATH }}"
+
+- name: Install Rosetta 2 (Apple Silicon only, for Intel compatibility)
+  shell: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+  register: rosetta_install
+  failed_when: false
+  changed_when: rosetta_install.rc == 0
+  when: is_apple_silicon
+
+- name: Display Rosetta 2 installation result
+  debug:
+    msg: "{{ 'Rosetta 2 installed' if rosetta_install.changed else 'Rosetta 2 already installed or not needed' }}"
+  when: is_apple_silicon
+
+- name: Ensure Python 3 symlink exists
+  file:
+    src: "{{ homebrew_prefix }}/bin/python3"
+    dest: "{{ homebrew_prefix }}/bin/python"
+    state: link
+    force: false
+  failed_when: false
+
+- name: Install essential pip packages
+  pip:
+    name:
+      - jinja2
+      - pyyaml
+      - requests  # For GitHub API calls
+    executable: "{{ homebrew_prefix }}/bin/pip3"
+    state: present
+  environment:
+    PATH: "{{ homebrew_prefix }}/bin:{{ ansible_env.PATH }}"
+
+- name: Verify architecture-specific installations
+  debug:
+    msg:
+      - "Architecture: {{ ansible_architecture }}"
+      - "Homebrew prefix: {{ homebrew_prefix }}"
+      - "Brew path: {{ homebrew_prefix }}/bin/brew"
+      - "Python path: {{ homebrew_prefix }}/bin/python3"

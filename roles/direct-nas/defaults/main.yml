@@ -1,0 +1,4 @@
+---
+# Default variables for direct-nas role
+direct_nas_ip: "10.10.10.2/24"
+netplan_config_path: "/etc/netplan/99-direct-nas.yaml"

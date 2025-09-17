@@ -1,0 +1,8 @@
+# @description: Provide default Node Exporter version and delegate to OS‐specific task files
+- name: Set Node Exporter version
+  set_fact:
+    node_exporter_version: "1.8.1"
+
+# @description: Include tasks based on the target system (linux.yml or darwin.yml)
+- name: Include OS-specific tasks
+  include_tasks: "{{ ansible_system | lower }}.yml"

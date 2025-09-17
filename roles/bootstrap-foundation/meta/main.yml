@@ -1,0 +1,70 @@
+---
+# @description: Meta information for bootstrap-foundation role
+galaxy_info:
+  role_name: bootstrap-foundation
+  author: TheBranchDriftCatalyst
+  description: Sets up system prerequisites, Git configuration, SSH keys, and GitHub integration for development environment
+  company: Catalyst DevSpace
+  license: MIT
+  min_ansible_version: 2.14
+
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - development
+    - git
+    - ssh
+    - github
+    - foundation
+    - bootstrap
+
+dependencies: []
+
+# @var git_user_name: Git username for global configuration
+# @var git_user_email: Git email address for global configuration
+# @var ssh_key_path: Path to SSH private key file
+# @var github_integration_enabled: Enable GitHub SSH key integration
+# @var catalyst_devspace_root: Root directory for catalyst repositories
+# @var component_repos: Dictionary of repositories to clone
+
+argument_specs:
+  main:
+    short_description: Bootstrap foundation development environment
+    description:
+      - Sets up essential directories and tools
+      - Configures Git globally with user credentials
+      - Generates SSH keys and adds to GitHub
+      - Clones catalyst devspace repositories
+      - Verifies Python and Task availability
+    options:
+      git_user_name:
+        description: Git username for global configuration
+        type: str
+        required: false
+        default: "TheBranchDriftCatalyst"
+      git_user_email:
+        description: Git email address for global configuration
+        type: str
+        required: false
+        default: "h.daniels@gmail.com"
+      ssh_key_path:
+        description: Path to SSH private key file
+        type: str
+        required: false
+        default: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+      github_integration_enabled:
+        description: Enable GitHub SSH key integration (requires GITHUB_TOKEN)
+        type: bool
+        required: false
+        default: true

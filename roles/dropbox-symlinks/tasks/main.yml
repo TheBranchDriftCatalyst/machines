@@ -1,0 +1,72 @@
+---
+# Tasks for setting up Dropbox symlinks
+
+- name: Display configuration for review
+  ansible.builtin.debug:
+    msg:
+      - "BACKUP_DIR = {{ backup_dir }}"
+      - "USER = {{ ansible_user }}"
+      - "DROPBOX_PATH = {{ dropbox_path }}"
+      - "SYMLINK_ENTRANCE = {{ symlink_entrance }}"
+
+- name: Display folder symlinks for review
+  ansible.builtin.debug:
+    msg: "{{ symlink_entrance }}/{{ item }} ---> {{ dropbox_path }}/{{ item }}"
+  loop: "{{ folders }}"
+
+- name: Check existing folders in home directory
+  ansible.builtin.command:
+    cmd: ls -la ~
+  register: home_listing
+  changed_when: false
+
+- name: Print Dropbox folders in home directory
+  ansible.builtin.debug:
+    msg: "{{ home_listing.stdout_lines | select('search', 'Dropbox') | list }}"
+
+- name: Prompt for confirmation before proceeding
+  ansible.builtin.pause:
+    prompt: "Are you positive you want to perform the symlink operation described above?"
+
+- name: Create backup directory if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Backup existing directories to backup location
+  ansible.builtin.synchronize:
+    src: "{{ symlink_entrance }}/{{ item }}/"
+    dest: "{{ backup_dir }}/{{ item }}"
+    rsync_opts:
+      - "--exclude=*.photoslibrary"
+    mode: pull
+  loop: "{{ folders }}"
+  ignore_errors: false
+  failed_when: false
+
+- name: Remove existing directories in the home directory
+  ansible.builtin.file:
+    path: "{{ symlink_entrance }}/{{ item }}"
+    state: absent
+  loop: "{{ folders }}"
+
+- name: Create symlinks to Dropbox folders
+  ansible.builtin.file:
+    src: "{{ dropbox_path }}/{{ item }}"
+    dest: "{{ symlink_entrance }}/{{ item }}"
+    state: link
+  loop: "{{ folders }}"
+
+- name: Create symlink for Movies to Videos
+  ansible.builtin.file:
+    src: "{{ dropbox_path }}/Videos"
+    dest: "{{ symlink_entrance }}/Movies"
+    state: link
+
+- name: Post-execution messages
+  ansible.builtin.debug:
+    msg:
+      - "All done!"
+      - "Check the backup directory for any old files that need to be dealt with."
+      - "Backup directory: {{ backup_dir }}"

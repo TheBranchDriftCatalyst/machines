@@ -1,0 +1,13 @@
+---
+# @description: Install Neovim and NvChad configuration for modern text editing
+# @var nvchad_install_dir: Directory for NvChad config (default: ~/.config/nvim)
+# @note: Installs Neovim via package manager and clones NvChad from GitHub
+# @requires: Internet connection for downloading NvChad
+
+- name: Install Neovim and NvChad
+  hosts: localhost
+  gather_facts: true
+  become: true
+
+  roles:
+    - nvchad

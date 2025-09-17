@@ -1,0 +1,51 @@
+---
+# Bootstrap Secrets Role
+# Sets up SOPS infrastructure and global secrets management
+#
+# IMPLEMENTATION NOTES:
+# Based on comprehensive existing SOPS code from:
+# - @machines/roles/catalyst-sops/_provision_sops.yaml (full GPG + keyring management)
+# - @machines/roles/catalyst-sops/_install_sops.yaml (OS-aware SOPS installation)
+# - @machines/roles/devsauce/tasks/provision_SOPS.yaml (simpler GPG setup)
+#
+# Key features implemented:
+# 1. Architecture-aware SOPS binary installation (ARM64/AMD64)
+# 2. GPG key generation with team keyring integration
+# 3. Global ~/.sops.yaml symlink for system-wide access
+# 4. Automatic addition of new machine keys to shared .sops.yaml
+# 5. Team collaboration via shared keyring/ directory
+# 6. Manifest file tracking (machine → key mapping)
+# 7. Validation testing of encryption/decryption
+
+- name: "🔐 Setting up SOPS secrets infrastructure"
+  debug:
+    msg: "Configuring encrypted secrets management with team keyring"
+
+- name: Verify secrets repository exists
+  stat:
+    path: "{{ secrets_path }}"
+  register: secrets_repo
+
+- name: Fail if secrets repository not found
+  fail:
+    msg: "Secrets repository not found at {{ secrets_path }}. Ensure foundation phase completed successfully."
+  when: not secrets_repo.stat.exists
+
+- name: Install SOPS binary
+  include_tasks: install_sops.yml
+
+- name: Setup GPG environment
+  include_tasks: setup_gpg.yml
+
+- name: Configure global SOPS
+  include_tasks: configure_sops.yml
+
+- name: Setup team keyring
+  include_tasks: setup_keyring.yml
+
+- name: Generate machine-specific GPG key (if needed)
+  include_tasks: generate_machine_key.yml
+  when: generate_machine_key | default(true)
+
+- name: Validate SOPS functionality
+  include_tasks: validate_sops.yml

@@ -1,0 +1,13 @@
+---
+# @description: Mount NFS shares from TrueNAS and Synology hosts using autofs
+# @var nfs_exports: Dictionary of NFS exports by hostname (configured in role defaults)
+# @note: Automatically resolves hostnames to IP addresses from inventory
+# @requires: Sudo access for autofs service and mount configuration
+
+- name: Mount NFS shares from TrueNAS hosts using autofs
+  hosts: all
+  gather_facts: true
+  become: true
+
+  roles:
+    - nfs-homelab

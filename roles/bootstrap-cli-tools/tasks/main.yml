@@ -1,0 +1,15 @@
+---
+# Bootstrap CLI Tools Role - STUB
+# TODO: Implement CLI tools build and installation
+# Based on @cli-tools/Taskfile.yaml and install.sh
+
+- name: "⚡ Setting up CLI tools (STUB)"
+  debug:
+    msg: "TODO: Build and install custom Go CLI applications"
+
+- name: Placeholder CLI tools tasks
+  debug:
+    msg:
+      - "TODO: Run task build for Go applications"
+      - "TODO: Integrate with dotfiles PATH (no zshrc conflicts)"
+      - "TODO: Setup Air for hot reload development"

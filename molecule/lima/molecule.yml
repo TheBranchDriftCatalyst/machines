@@ -1,0 +1,22 @@
+---
+driver:
+  name: docker
+
+platforms:
+  - name: macos-arm64
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+  - name: macos-intel
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: ../../roles
+  inventory:
+    host_vars:
+      macos-arm64:
+        homebrew_prefix: /opt/homebrew
+      macos-intel:
+        homebrew_prefix: /usr/local

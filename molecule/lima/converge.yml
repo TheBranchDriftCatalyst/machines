@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Run molecule test role
+      include_role:
+        name: molecule-test

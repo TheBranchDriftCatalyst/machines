@@ -1,0 +1,6 @@
+# @description: Restart the node_exporter service to apply updated binaries or configuration
+- name: Restart node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: restarted
+    daemon_reload: true

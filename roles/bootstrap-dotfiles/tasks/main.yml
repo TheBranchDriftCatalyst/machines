@@ -1,0 +1,16 @@
+---
+# Bootstrap Dotfiles Role - STUB
+# TODO: Implement dotfiles installation with profile selection
+# Based on @dotfiles-2024/profiles/* and install.sh
+
+- name: "🏠 Setting up dotfiles environment (STUB)"
+  debug:
+    msg: "TODO: Install @dotfiles-2024 with profile selection, afx, brew bundle"
+
+- name: Placeholder dotfiles tasks
+  debug:
+    msg:
+      - "TODO: Install Homebrew + 416 packages"
+      - "TODO: Setup AFX with 900+ CLI tools"
+      - "TODO: Configure shell environment"
+      - "TODO: Setup direnv integration"

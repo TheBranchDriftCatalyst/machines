@@ -1,0 +1,13 @@
+# @description: Install node_exporter formula via Homebrew on macOS hosts
+- name: Install node_exporter via Homebrew (macOS)
+  become: false
+  homebrew:
+    name: node_exporter
+    state: present
+
+# @description: Launch node_exporter as a background service using brew services
+# @creates: ~/Library/LaunchAgents/homebrew.mxcl.node_exporter.plist
+- name: Enable node_exporter via brew services
+  ansible.builtin.command: brew services start node_exporter
+  args:
+    creates: ~/Library/LaunchAgents/homebrew.mxcl.node_exporter.plist

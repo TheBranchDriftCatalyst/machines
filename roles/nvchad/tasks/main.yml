@@ -1,0 +1,36 @@
+---
+# Tasks for installing Neovim and NvChad
+
+- name: Install Neovim on Linux
+  ansible.builtin.package:
+    name: neovim
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Install Neovim on macOS using Homebrew
+  community.general.homebrew:
+    name: neovim
+    state: present
+  when: ansible_os_family == "Darwin"
+  become: false
+
+- name: Ensure nvim config directory exists
+  ansible.builtin.file:
+    path: "{{ nvchad_install_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Install NvChad
+  ansible.builtin.git:
+    repo: "{{ nvchad_repo }}"
+    dest: "{{ nvchad_install_dir }}"
+    version: "{{ nvchad_branch }}"
+    force: yes
+
+- name: Display NvChad installation info
+  ansible.builtin.debug:
+    msg:
+      - "NvChad installed successfully!"
+      - "Config directory: {{ nvchad_install_dir }}"
+      - "Run 'nvim' to start using NvChad"

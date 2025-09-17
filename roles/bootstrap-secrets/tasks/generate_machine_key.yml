@@ -1,0 +1,92 @@
+---
+# Generate machine-specific GPG key and add to team keyring
+# Based on: @machines/roles/catalyst-sops/_provision_sops.yaml (lines 52-105)
+
+- name: "🔧 Generating machine-specific GPG key"
+  debug:
+    msg: "Creating new GPG key for this machine and updating shared keyring"
+
+- name: Export the GPG public key
+  command: gpg --export --armor "{{ gpg_fingerprint[0] }}"
+  register: exported_key
+  changed_when: false
+
+- name: Check if machine key already exists in keyring
+  stat:
+    path: "{{ secrets_path }}/keyring/{{ gpg_fingerprint[0] }}.pub.asc"
+  register: machine_key_exists
+
+- name: Write the exported GPG public key to keyring
+  copy:
+    content: "{{ exported_key.stdout }}"
+    dest: "{{ secrets_path }}/keyring/{{ gpg_fingerprint[0] }}.pub.asc"
+    mode: "0644"
+    force: true
+  when: not machine_key_exists.stat.exists
+
+- name: Read current SOPS configuration
+  slurp:
+    src: "{{ secrets_path }}/.sops.yaml"
+  register: sops_yaml_content
+
+- name: Parse current SOPS configuration
+  set_fact:
+    sops_yaml: "{{ sops_yaml_content.content | b64decode | from_yaml }}"
+
+- name: Check if machine key already in SOPS config
+  set_fact:
+    key_in_config: "{{ gpg_fingerprint[0] in sops_yaml.creation_rules[0].pgp }}"
+
+- name: Add new key to SOPS configuration
+  set_fact:
+    sops_yaml: >-
+      {{
+        sops_yaml |
+        combine({
+          'creation_rules': sops_yaml.creation_rules | map('combine', {
+            'pgp': item.pgp | regex_replace('\s+', '') + ', ' + gpg_fingerprint[0]
+          })
+        })
+      }}
+  with_items: "{{ sops_yaml.creation_rules }}"
+  when: not key_in_config
+
+- name: Save updated SOPS configuration
+  copy:
+    content: "{{ sops_yaml | to_nice_yaml }}"
+    dest: "{{ secrets_path }}/.sops.yaml"
+    force: true
+    mode: "0644"
+    backup: true
+  when: not key_in_config
+
+- name: Update manifest file with machine key mapping
+  lineinfile:
+    path: "{{ secrets_path }}/manifest.sops.yaml"
+    line: "{{ gpg_fingerprint[0] }}: {{ key_name }}"
+    create: true
+    state: present
+    mode: "0644"
+    backup: true
+
+- name: Display machine key integration results
+  debug:
+    msg:
+      - "Machine GPG key: {{ gpg_fingerprint[0] }}"
+      - "Key name: {{ key_name }}"
+      - "Public key saved: {{ secrets_path }}/keyring/{{ gpg_fingerprint[0] }}.pub.asc"
+      - "SOPS config: {{ 'Updated' if not key_in_config else 'Already configured' }}"
+      - "Manifest updated: {{ secrets_path }}/manifest.sops.yaml"
+
+- name: Verify updated SOPS configuration
+  slurp:
+    src: "{{ secrets_path }}/.sops.yaml"
+  register: final_sops_config
+
+- name: Display final SOPS key count
+  set_fact:
+    final_key_count: "{{ (final_sops_config.content | b64decode | from_yaml).creation_rules[0].pgp.split(',') | length }}"
+
+- name: Show keyring summary
+  debug:
+    msg: "SOPS now configured with {{ final_key_count }} team keys for collaborative encryption"

@@ -1,0 +1,53 @@
+# @description: Define which Node Exporter release to install
+- name: Set Node Exporter version
+  ansible.builtin.set_fact:
+    node_exporter_version: "1.9.1"
+
+# @description: Ensure a dedicated, non‐login system user exists for running node_exporter
+- name: Create node_exporter user
+  ansible.builtin.user:
+    name: node_exporter
+    shell: /usr/sbin/nologin
+    system: true
+    create_home: false
+
+# @description: Download the specified Node Exporter tarball and verify its checksum
+- name: Download node_exporter binary
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/node_exporter.tar.gz"
+    mode: '0644'
+    # checksum: "sha256:{{ lookup('url', 'https://github.com/prometheus/node_exporter/releases/download/v' + node_exporter_version + '/sha256sums.txt') | regex_search('([a-f0-9]{64})\s+node_exporter-' + node_exporter_version + '.linux-amd64.tar.gz', '\\1') }}"
+  register: download
+
+# @description: Unpack the Node Exporter binary to /opt and skip if already extracted
+- name: Extract node_exporter
+  ansible.builtin.unarchive:
+    src: "/tmp/node_exporter.tar.gz"
+    dest: "/opt/"
+    remote_src: true
+    creates: "/opt/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+
+# @description: Symlink the node_exporter executable into /usr/local/bin for global access
+- name: Symlink binary to /usr/local/bin
+  ansible.builtin.file:
+    src: "/opt/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+    dest: /usr/local/bin/node_exporter
+    state: link
+    force: true
+
+# @description: Deploy the systemd unit file for node_exporter and trigger a restart handler
+- name: Copy systemd service unit
+  ansible.builtin.template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    mode: '0644'
+  notify: Restart node_exporter
+
+# @description: Enable and start the node_exporter systemd service, ensuring daemon reload
+- name: Enable and start node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    enabled: true
+    state: started
+    daemon_reload: true

@@ -1,0 +1,36 @@
+---
+# @description: Default variables for bootstrap-foundation role
+# @note: This role combines system foundation setup with Git/SSH provisioning
+
+# Git configuration
+git_user_name: "TheBranchDriftCatalyst"
+git_user_email: "h.daniels@gmail.com"
+
+# SSH key configuration
+ssh_key_comment: "{{ git_user_email }}"
+ssh_key_path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+
+# GitHub integration (requires GITHUB_TOKEN environment variable)
+github_integration_enabled: true
+
+# Foundation paths
+catalyst_devspace_root: "{{ ansible_env.HOME }}/catalyst-devspace"
+
+# Component repositories to clone
+component_repos:
+  cli-tools:
+    url: "https://github.com/TheBranchDriftCatalyst/catalyst-cli-tools.git"
+    path: "{{ catalyst_devspace_root }}/catalyst/@cli-tools"
+    branch: "main"
+  dotfiles:
+    url: "https://github.com/TheBranchDriftCatalyst/catalyst-dotfiles-2024.git"
+    path: "{{ catalyst_devspace_root }}/catalyst/@dotfiles-2024"
+    branch: "main"
+  machines:
+    url: "https://github.com/TheBranchDriftCatalyst/catalyst-machines.git"
+    path: "{{ catalyst_devspace_root }}/catalyst/@machines"
+    branch: "main"
+  secrets:
+    url: "https://github.com/TheBranchDriftCatalyst/catalyst-secrets.git"
+    path: "{{ catalyst_devspace_root }}/catalyst/@secrets"
+    branch: "main"

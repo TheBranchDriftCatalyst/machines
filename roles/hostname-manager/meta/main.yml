@@ -1,0 +1,41 @@
+---
+# @description: Meta information for hostname-manager role
+galaxy_info:
+  role_name: hostname-manager
+  author: TheBranchDriftCatalyst
+  description: Update system hostname to match Ansible inventory with mDNS support
+  company: Catalyst DevSpace
+  license: MIT
+  min_ansible_version: 2.14
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: RedHat
+      versions:
+        - 8
+        - 9
+
+  galaxy_tags:
+    - hostname
+    - system
+    - mdns
+    - avahi
+    - networking
+
+dependencies: []
+
+argument_specs:
+  main:
+    short_description: Configure system hostname
+    description:
+      - Sets hostname to match inventory_hostname
+      - Updates /etc/hostname and /etc/hosts
+      - Restarts hostname service if using systemd
+      - Installs and configures Avahi for mDNS

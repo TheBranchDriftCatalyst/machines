@@ -1,0 +1,147 @@
+---
+# @description: Bootstrap Foundation Role - Complete development environment setup
+# @note: Combines system foundation with Git/SSH provisioning and GitHub integration
+# @requires: GITHUB_TOKEN environment variable for GitHub integration
+
+- name: "🏗️  Setting up foundation environment"
+  debug:
+    msg: "Installing system prerequisites and development tools"
+
+# @description: Load OS-specific foundation tasks (darwin.yml for macOS)
+- name: Include OS-specific foundation tasks
+  include_tasks: "{{ ansible_facts['os_family'] | lower }}.yml"
+
+# @description: Create essential directories for development environment
+- name: Ensure essential directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ansible_env.HOME }}/bin"
+    - "{{ ansible_env.HOME }}/.local/bin"
+    - "{{ ansible_env.HOME }}/.config"
+    - "{{ catalyst_devspace_root }}"
+
+# @description: Verify Git is available before proceeding with configuration
+- name: Check if git is available
+  command: which git
+  register: git_check
+  failed_when: false
+  changed_when: false
+
+- name: Verify git installation
+  fail:
+    msg: "Git is required but not found in PATH"
+  when: git_check.rc != 0
+
+- name: Configure git globally
+  git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop:
+    - { name: "user.name", value: "{{ git_user_name }}" }
+    - { name: "user.email", value: "{{ git_user_email }}" }
+    - { name: "init.defaultBranch", value: "main" }
+    - { name: "pull.rebase", value: "false" }
+
+# @description: SSH key setup and GitHub integration
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_env.USER }}"
+    group: "{{ ansible_env.USER }}"
+
+- name: Check if SSH key already exists
+  ansible.builtin.stat:
+    path: "{{ ssh_key_path }}"
+  register: ssh_key
+
+- name: Generate a new SSH key pair
+  ansible.builtin.command:
+    cmd: ssh-keygen -t rsa -b 2048 -C "{{ git_user_name }}@{{ ansible_facts['hostname'] }}" -f {{ ssh_key_path }} -N ""
+  when: not ssh_key.stat.exists
+
+- name: Copy public key to authorized_keys
+  ansible.posix.authorized_key:
+    user: "{{ ansible_env.USER }}"
+    state: present
+    key: "{{ lookup('file', ssh_key_path + '.pub') }}"
+
+- name: Add GitHub to known hosts
+  ansible.builtin.known_hosts:
+    path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
+    name: github.com
+    key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+
+- name: Read SSH public key for GitHub integration
+  ansible.builtin.slurp:
+    src: "{{ ssh_key_path }}.pub"
+  register: ssh_pub_key
+  when: github_integration_enabled | default(true)
+
+- name: Add SSH key to GitHub
+  ansible.builtin.uri:
+    url: https://api.github.com/user/keys
+    method: POST
+    headers:
+      Accept: "application/vnd.github+json"
+      Authorization: "Bearer {{ github_token }}"
+      "X-GitHub-Api-Version": "2022-11-28"
+    body: "{{ {'title': ansible_facts['hostname'], 'key': ssh_pub_key.content | b64decode} | to_json }}"
+    status_code: 201
+  when:
+    - github_integration_enabled | default(true)
+    - github_token is defined
+    - ssh_key.stat.exists
+  vars:
+    github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+  ignore_errors: true
+
+- name: Check Python version
+  command: python3 --version
+  register: python_version
+  changed_when: false
+  failed_when: false
+
+- name: Display Python version
+  debug:
+    msg: "Python version: {{ python_version.stdout }}"
+  when: python_version.rc == 0
+
+- name: Clone catalyst devspace repositories
+  git:
+    repo: "{{ item.value.url }}"
+    dest: "{{ item.value.path }}"
+    version: "{{ item.value.branch }}"
+    force: false
+    update: true
+  loop: "{{ component_repos | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}: {{ item.value.url }}"
+  register: git_clone_result
+
+- name: Display repository cloning results
+  debug:
+    msg: "{{ item.item.key }}: {{ 'Updated' if item.changed else 'Already up to date' }}"
+  loop: "{{ git_clone_result.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+
+- name: Ensure task is available
+  stat:
+    path: /usr/local/bin/task
+  register: task_binary
+
+- name: Check if task command is available via brew
+  command: which task
+  register: task_check
+  failed_when: false
+  changed_when: false
+
+- name: Verify task availability
+  debug:
+    msg: "Task (go-task) status: {{ 'Available' if task_check.rc == 0 else 'Not found - install with brew install go-task' }}"

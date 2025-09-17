@@ -1,0 +1,10 @@
+---
+# Default variables for dropbox-symlinks role
+dropbox_path: "{{ lookup('pipe', 'realpath ~/Library/CloudStorage/Dropbox') }}"
+symlink_entrance: "{{ lookup('pipe', 'realpath ~') }}"
+backup_dir: "{{ ansible_env.PWD }}/.backup"
+folders:
+  - Downloads
+  - Documents
+  - Pictures
+  - Videos

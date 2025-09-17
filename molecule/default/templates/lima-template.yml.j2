@@ -1,0 +1,57 @@
+# Lima VM configuration template for Catalyst Bootstrap Testing
+# This template is used by Molecule to create macOS simulation environments
+
+# Architecture-specific configuration
+arch: {{ lima_arch | default('aarch64') }}
+
+# VM resource allocation
+memory: {{ lima_memory | default('4GiB') }}
+disk: {{ lima_disk | default('20GiB') }}
+cpus: {{ lima_cpus | default(2) }}
+
+# Base image configuration
+images:
+  - location: "{{ lima_image_url }}"
+    arch: "{{ lima_arch | default('aarch64') }}"
+
+# Network configuration for Lima VMs
+networks:
+  - lima: shared
+
+# Provisioning script to prepare the VM for Ansible
+provision:
+  - mode: system
+    script: |
+      # Install essential packages for Ansible
+      apk update
+      apk add python3 py3-pip openssh sudo bash curl git
+
+      # Configure SSH service
+      rc-update add sshd
+      rc-service sshd start
+
+      # Create ansible user with sudo privileges
+      adduser -D -s /bin/bash ansible
+      echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+      # Set up SSH keys for ansible user
+      mkdir -p /home/ansible/.ssh
+      chmod 700 /home/ansible/.ssh
+      chown ansible:ansible /home/ansible/.ssh
+
+      # Allow password authentication for initial setup
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      rc-service sshd restart
+
+      # Set a password for ansible user (for initial molecule connection)
+      echo 'ansible:ansible' | chpasswd
+
+# Mount configuration for development
+mounts:
+  - location: /tmp/lima
+    writable: true
+
+# Environment variables for testing
+env:
+  CATALYST_TEST_MODE: "true"
+  ANSIBLE_HOST_KEY_CHECKING: "false"

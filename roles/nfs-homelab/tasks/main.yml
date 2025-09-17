@@ -1,0 +1,86 @@
+---
+# Tasks for mounting NFS shares from TrueNAS hosts using autofs
+
+- name: Debug resolved IP addresses for NFS exports
+  ansible.builtin.debug:
+    msg: "Host {{ item.key }} resolved to {{ hostvars[item.key].ansible_host }}"
+  loop: "{{ nfs_exports | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Initialize resolved_nfs_exports
+  set_fact:
+    resolved_nfs_exports: {}
+
+- name: Resolve hostnames to IP addresses
+  set_fact:
+    resolved_nfs_exports: >-
+      {{
+        resolved_nfs_exports | combine({
+          (hostvars[item.key].ansible_host): item.value
+        })
+      }}
+  loop: "{{ nfs_exports | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Debug resolved NFS exports
+  ansible.builtin.debug:
+    var: resolved_nfs_exports
+
+- name: Install required packages for autofs and NFS on Linux
+  ansible.builtin.package:
+    name:
+      - autofs
+      - nfs-common
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Install required packages for autofs and NFS on macOS
+  become: false
+  community.general.homebrew:
+    name:
+      - autofs
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Enable and start the autofs service
+  ansible.builtin.systemd:
+    name: autofs
+    enabled: true
+    state: started
+  when: ansible_service_mgr == "systemd"
+
+- name: Ensure the base mount directory exists
+  ansible.builtin.file:
+    path: "{{ autofs_base }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure auto.master to include auto.nfs
+  ansible.builtin.blockinfile:
+    path: "/etc/auto.master"
+    block: |
+      {{ autofs_base }} /etc/auto.nfs --ghost
+    marker: "# {mark} ANSIBLE MANAGED AUTOFS"
+
+- name: Configure the /etc/auto.nfs map file
+  ansible.builtin.blockinfile:
+    path: "/etc/auto.nfs"
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED AUTO.NFS"
+    block: |
+      {% for host, exports in resolved_nfs_exports.items() %}
+      {% for share in exports %}
+      {{ share.map_name }} -fstype=nfs,rw {{ host }}:{{ share.export }}
+      {% endfor %}
+      {% endfor %}
+
+- name: Reload the autofs service to apply changes
+  ansible.builtin.systemd:
+    name: autofs
+    state: reloaded
+  when: ansible_service_mgr == "systemd"

@@ -1,0 +1,52 @@
+---
+# @description: Meta information for bootstrap-secrets role
+galaxy_info:
+  role_name: bootstrap-secrets
+  author: TheBranchDriftCatalyst
+  description: Comprehensive SOPS infrastructure setup with team keyring integration and GPG key management
+  company: Catalyst DevSpace
+  license: MIT
+  min_ansible_version: 2.14
+
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - sops
+    - encryption
+    - secrets
+    - gpg
+    - security
+    - keyring
+
+dependencies: []
+
+argument_specs:
+  main:
+    short_description: Bootstrap SOPS secrets infrastructure
+    description:
+      - Installs SOPS binary with architecture detection
+      - Sets up GPG environment for encryption
+      - Configures global SOPS with team keyring
+      - Generates machine-specific GPG keys
+      - Validates SOPS functionality
+    options:
+      secrets_path:
+        description: Path to secrets repository
+        type: str
+        required: true
+      generate_machine_key:
+        description: Generate machine-specific GPG key
+        type: bool
+        required: false
+        default: true

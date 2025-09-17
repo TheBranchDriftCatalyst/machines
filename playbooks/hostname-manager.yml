@@ -1,0 +1,12 @@
+---
+# @description: Update system hostname to match Ansible inventory with mDNS support
+# @note: Automatically uses inventory_hostname as the new hostname
+# @requires: Sudo access for hostname and system file modifications
+
+- name: Update hostname to match inventory
+  hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+    - hostname-manager

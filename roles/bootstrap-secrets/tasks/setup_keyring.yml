@@ -1,0 +1,62 @@
+---
+# Setup team keyring and import existing keys
+# Based on: @machines/roles/catalyst-sops/_provision_sops.yaml (lines 45-50)
+
+- name: "🔐 Setting up team keyring"
+  debug:
+    msg: "Importing Catalyst Dev public keys from keyring directory"
+
+- name: Check if keyring directory exists
+  stat:
+    path: "{{ secrets_path }}/keyring"
+  register: keyring_dir
+
+- name: Display keyring status
+  debug:
+    msg: "Keyring directory {{ 'found' if keyring_dir.stat.exists else 'not found' }} at {{ secrets_path }}/keyring"
+
+- name: Find available public keys
+  find:
+    paths: "{{ secrets_path }}/keyring"
+    patterns: "*.pub.asc"
+  register: available_keys
+  when: keyring_dir.stat.exists
+
+- name: Display available public keys
+  debug:
+    msg: "Found {{ available_keys.files | length if available_keys.files is defined else 0 }} public keys in keyring"
+
+- name: Import Catalyst Dev public keys
+  command: gpg --import "{{ item.path }}"
+  loop: "{{ available_keys.files }}"
+  register: gpg_import_result
+  failed_when: false  # Import might fail if key already exists
+  changed_when: "'imported' in gpg_import_result.stderr"
+  when:
+    - keyring_dir.stat.exists
+    - available_keys.files is defined
+    - available_keys.files | length > 0
+
+- name: Display import results
+  debug:
+    msg:
+      - "GPG import results:"
+      - "{{ item.item.path | basename }}: {{ 'Imported' if item.changed else 'Already imported' }}"
+  loop: "{{ gpg_import_result.results }}"
+  when: gpg_import_result.results is defined
+
+- name: List imported GPG keys
+  command: gpg --list-keys --with-colons
+  register: gpg_list_all_keys
+  changed_when: false
+
+- name: Count total GPG keys
+  set_fact:
+    total_gpg_keys: "{{ gpg_list_all_keys.stdout_lines | select('match', '^pub:') | list | length }}"
+
+- name: Display keyring summary
+  debug:
+    msg:
+      - "Team keyring setup complete"
+      - "Total GPG keys available: {{ total_gpg_keys }}"
+      - "Keys imported from: {{ secrets_path }}/keyring"

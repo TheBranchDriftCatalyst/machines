@@ -1,0 +1,51 @@
+---
+# @description: Meta information for direct-nas role
+galaxy_info:
+  role_name: direct-nas
+  author: TheBranchDriftCatalyst
+  description: Setup direct connection to NAS using Netplan configuration (Ubuntu only)
+  company: Catalyst DevSpace
+  license: MIT
+  min_ansible_version: 2.14
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - networking
+    - nas
+    - netplan
+    - ubuntu
+    - storage
+
+dependencies: []
+
+argument_specs:
+  main:
+    short_description: Configure direct NAS network connection
+    description:
+      - Prompts for network interface selection
+      - Creates Netplan configuration for direct connection
+      - Applies network configuration automatically
+    options:
+      direct_nas_interface:
+        description: Network interface to use for direct connection (e.g., enp2s0)
+        type: str
+        required: true
+      direct_nas_ip:
+        description: IP address/CIDR for direct connection
+        type: str
+        required: false
+        default: "10.10.10.2/24"
+      netplan_config_path:
+        description: Path to Netplan configuration file
+        type: str
+        required: false
+        default: "/etc/netplan/99-direct-nas.yaml"

@@ -1,0 +1,5 @@
+---
+# Default variables for NvChad role
+nvchad_install_dir: "{{ ansible_env.HOME }}/.config/nvim"
+nvchad_repo: "https://github.com/NvChad/NvChad.git"
+nvchad_branch: "master"
